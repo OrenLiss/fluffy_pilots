@@ -7,8 +7,64 @@
   <link rel="stylesheet" href="styles/main.css">
   <link rel="stylesheet" href="styles/menu.css">
   <link rel="stylesheet" href="styles/hangar.css">
+  
+  <!-- Стили для окна авторизации -->
+  <style>
+    #auth-screen {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: #0a0a1a; /* Темный фон в стиле игры */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      z-index: 9999;
+      color: white;
+      font-family: monospace;
+    }
+    #auth-screen input {
+      display: block;
+      width: 250px;
+      padding: 10px;
+      margin: 10px 0;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid #00ffff;
+      color: white;
+      font-family: monospace;
+    }
+    #auth-screen button {
+      width: 270px;
+      padding: 10px;
+      margin: 5px 0;
+      background: #00ffff;
+      border: none;
+      color: black;
+      cursor: pointer;
+      font-weight: bold;
+      font-family: monospace;
+    }
+    #auth-screen button:hover {
+      background: #00cccc;
+    }
+    .auth-message {
+      margin-top: 15px;
+      color: #ff5555;
+    }
+  </style>
 </head>
 <body>
+
+<!-- Экран авторизации -->
+<div id="auth-screen">
+  <h2 style="color: #00ffff; text-shadow: 0 0 10px #00ffff;">СИСТЕМА ВХОДА</h2>
+  <input type="text" id="auth-nick" placeholder="Введите никнейм" autocomplete="off">
+  <input type="password" id="auth-pass" placeholder="Введите пароль" autocomplete="off">
+  <button id="btn-login">ВОЙТИ</button>
+  <button id="btn-register">ЗАРЕГИСТРИРОВАТЬСЯ</button>
+  <div id="auth-msg" class="auth-message"></div>
+</div>
+
+<!-- Сама игра (изначально скрыта) -->
 <div id="cosmo-game" style="display:none">
   <canvas id="cosmo-canvas"></canvas>
   <div id="cosmo-overlay">
@@ -19,6 +75,129 @@
     <div class="cosmo-hint">ИЛИ НАЖМИ ENTER</div>
   </div>
 </div>
+
+<!-- Подключение Firebase и логика авторизации -->
+<script type="module">
+  // Используем CDN-ссылки, так как GitHub Pages не поддерживает npm-импорты напрямую
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+  import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+  // ВАША КОНФИГУРАЦИЯ (скопирована из вашего сообщения)
+  const firebaseConfig = {
+    apiKey: "AIzaSyCuRoWVmUkhNNXdR1l_y9ouzz9jEoSi6c0",
+    authDomain: "fluffypilots-9b9d6.firebaseapp.com",
+    projectId: "fluffypilots-9b9d6",
+    storageBucket: "fluffypilots-9b9d6.firebasestorage.app",
+    messagingSenderId: "386734053785",
+    appId: "1:386734053785:web:1e9654f84f0b1e72029b08"
+  };
+
+  // Инициализация Firebase
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  // Элементы интерфейса
+  const authScreen = document.getElementById('auth-screen');
+  const gameScreen = document.getElementById('cosmo-game');
+  const nickInput = document.getElementById('auth-nick');
+  const passInput = document.getElementById('auth-pass');
+  const msgDiv = document.getElementById('auth-msg');
+
+  // Вспомогательная функция для обработки ошибок
+  function showMessage(text, isError = true) {
+    msgDiv.innerText = text;
+    msgDiv.style.color = isError ? "#ff5555" : "#00ff00";
+  }
+
+  // Функция успешного входа
+  function onLoginSuccess() {
+    authScreen.style.display = 'none';
+    gameScreen.style.display = 'block';
+    
+    // Опционально: если игра должна запуститься с нуля после входа,
+    // можно раскомментировать строку ниже, чтобы перезагрузить страницу.
+    // window.location.reload(); 
+  }
+
+  // Обработчик РЕГИСТРАЦИИ
+  document.getElementById('btn-register').addEventListener('click', async () => {
+    const nick = nickInput.value.trim();
+    const pass = passInput.value;
+
+    if (!nick || !pass) {
+      showMessage("Введите ник и пароль!");
+      return;
+    }
+    if (pass.length < 6) {
+      showMessage("Пароль должен быть не менее 6 символов!");
+      return;
+    }
+
+    // Firebase требует email, поэтому маскируем ник под email
+    const fakeEmail = `${nick}@mygame.local`;
+
+    try {
+      showMessage("Создание аккаунта...", false);
+      
+      // Создаем пользователя в Firebase
+      const userCredential = await createUserWithEmailAndPassword(auth, fakeEmail, pass);
+      const user = userCredential.user;
+
+      // Создаем запись в базе данных Firestore для этого игрока
+      await setDoc(doc(db, "players", user.uid), {
+        nickname: nick,
+        score: 0,
+        createdAt: new Date()
+      });
+
+      showMessage("Успешная регистрация!", false);
+      setTimeout(onLoginSuccess, 1000); // Заходим в игру через секунду
+      
+    } catch (error) {
+      console.error(error);
+      if (error.code === 'auth/email-already-in-use') {
+        showMessage("Этот ник уже занят!");
+      } else {
+        showMessage("Ошибка: " + error.message);
+      }
+    }
+  });
+
+  // Обработчик ВХОДА
+  document.getElementById('btn-login').addEventListener('click', async () => {
+    const nick = nickInput.value.trim();
+    const pass = passInput.value;
+
+    if (!nick || !pass) {
+      showMessage("Введите ник и пароль!");
+      return;
+    }
+
+    const fakeEmail = `${nick}@mygame.local`;
+
+    try {
+      showMessage("Вход в систему...", false);
+      
+      // Входим в систему
+      await signInWithEmailAndPassword(auth, fakeEmail, pass);
+      
+      showMessage("Успешный вход!", false);
+      setTimeout(onLoginSuccess, 500); // Заходим в игру
+    } catch (error) {
+      console.error(error);
+      // Проверяем на самые частые ошибки
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+        showMessage("Неверный ник или пароль!");
+      } else {
+        showMessage("Ошибка: " + error.message);
+      }
+    }
+  });
+</script>
+
+<!-- Подключение вашей игры (оставляем как было) -->
 <script type="module" src="src/main.js"></script>
 </body>
 </html>
