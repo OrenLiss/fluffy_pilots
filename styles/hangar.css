@@ -1,0 +1,28 @@
+.hangar-card { max-width: 720px; width: 94%; padding: 26px; }
+.hangar-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
+.hangar-nick { font-size:13px; letter-spacing:4px; }
+.hangar-credits { font-size:16px; color:#ffd166; letter-spacing:2px;
+  text-shadow:0 0 14px rgba(255,209,102,.6); }
+.hangar-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 640px){ .hangar-grid{ grid-template-columns:1fr; } }
+
+.upgrade-list { display:flex; flex-direction:column; gap:10px; }
+.upg-row {
+  display:grid; grid-template-columns: 1fr auto; gap:8px;
+  padding:10px 12px; border:1px solid rgba(94,242,255,.18); border-radius:3px;
+}
+.upg-name { font-size:12px; letter-spacing:2px; }
+.upg-level { font-size:10px; letter-spacing:2px; color:rgba(140,200,235,.6); }
+.upg-bar { display:flex; gap:3px; margin-top:4px; }
+.upg-seg { width:14px; height:5px; background:rgba(94,242,255,.15); }
+.upg-seg.on { background:#5ef2ff; box-shadow:0 0 8px #5ef2ff; }
+
+.loc-list { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.loc-card {
+  padding:14px; border:1px solid rgba(94,242,255,.25); border-radius:3px;
+  cursor:pointer; transition:all .2s; text-align:left;
+}
+.loc-card:hover { background:rgba(94,242,255,.06); }
+.loc-card .loc-name { font-size:12px; letter-spacing:2px; }
+.loc-card .loc-haz { font-size:10px; letter-spacing:2px; color:rgba(140,200,235,.6); }
+.loc-dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px; }

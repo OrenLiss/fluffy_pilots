@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>НЕОН · КОСМОС</title>
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="styles/menu.css">
+  <link rel="stylesheet" href="styles/hangar.css">
+</head>
+<body>
+<div id="cosmo-game" style="display:none">
+  <canvas id="cosmo-canvas"></canvas>
+  <div id="cosmo-overlay">
+    <div class="cosmo-tag">СИГНАЛ ПОТЕРЯН</div>
+    <div class="cosmo-label">ПРОЛЕТЕНО</div>
+    <div class="cosmo-score"><span id="cosmo-final-score">0</span><em>св. лет</em></div>
+    <button id="cosmo-restart">В АНГАР</button>
+    <div class="cosmo-hint">ИЛИ НАЖМИ ENTER</div>
+  </div>
+</div>
+<script type="module" src="src/main.js"></script>
+</body>
+</html>

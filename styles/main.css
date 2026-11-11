@@ -1,0 +1,59 @@
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0; height: 100%;
+  background: #04050b; color: #8ff9ff;
+  font-family: "Courier New", monospace;
+  overflow: hidden;
+}
+
+#cosmo-game {
+  position: fixed; inset: 0;
+  width: 100vw; height: 100vh;
+  margin: 0; padding: 0;
+  overflow: hidden;
+  background: #04050b;
+  z-index: 2147483000;
+  touch-action: none; cursor: crosshair;
+}
+#cosmo-canvas {
+  display: block; position: absolute; inset: 0;
+  width: 100%; height: 100%;
+}
+#cosmo-overlay {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  background: radial-gradient(circle at 50% 45%, rgba(12,4,30,.72), rgba(3,4,10,.95));
+  opacity: 0; pointer-events: none;
+  transition: opacity .4s ease;
+  text-align: center; z-index: 2; color: #8ff9ff;
+}
+#cosmo-overlay.cosmo-show { opacity: 1; pointer-events: auto; }
+#cosmo-overlay .cosmo-tag {
+  font-size: 13px; letter-spacing: 9px; color: #ff4d7a;
+  text-shadow: 0 0 16px rgba(255,77,122,.85); margin-bottom: 30px;
+}
+#cosmo-overlay .cosmo-label { font-size: 11px; letter-spacing: 5px; color: rgba(140,200,235,.6); }
+#cosmo-overlay .cosmo-score {
+  display: flex; align-items: baseline; gap: 12px;
+  font-size: 56px; font-weight: 700; color: #8ff9ff;
+  text-shadow: 0 0 28px rgba(0,229,255,.8); letter-spacing: 2px; margin-top: 6px;
+}
+#cosmo-overlay .cosmo-score em {
+  font-style: normal; font-size: 15px; letter-spacing: 3px;
+  color: rgba(140,200,235,.7); text-shadow: none;
+}
+#cosmo-restart {
+  margin-top: 34px; padding: 13px 34px;
+  background: transparent; border: 1.5px solid #5ef2ff;
+  color: #5ef2ff; font-family: "Courier New", monospace;
+  font-size: 14px; letter-spacing: 4px; cursor: pointer;
+  border-radius: 2px;
+  box-shadow: 0 0 16px rgba(94,242,255,.45), inset 0 0 16px rgba(94,242,255,.12);
+  transition: all .2s ease;
+}
+#cosmo-restart:hover {
+  background: rgba(94,242,255,.12);
+  box-shadow: 0 0 28px rgba(94,242,255,.85), inset 0 0 24px rgba(94,242,255,.28);
+}
+#cosmo-overlay .cosmo-hint { margin-top: 20px; font-size: 10px; letter-spacing: 3px; color: rgba(140,200,235,.35); }

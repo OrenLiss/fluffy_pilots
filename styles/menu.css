@@ -1,0 +1,56 @@
+.screen {
+  position: fixed; inset: 0; z-index: 2147483001;
+  display: none; align-items: center; justify-content: center;
+  background: radial-gradient(circle at 50% 45%, rgba(12,4,30,.85), rgba(3,4,10,.98));
+  color: #8ff9ff; font-family: "Courier New", monospace;
+  text-align: center;
+}
+.screen.show { display: flex; }
+
+.menu-card {
+  max-width: 520px; width: 90%; padding: 32px;
+  border: 1.5px solid rgba(94,242,255,.35);
+  border-radius: 4px;
+  background: rgba(6,10,20,.65);
+  box-shadow: 0 0 40px rgba(94,242,255,.15), inset 0 0 40px rgba(94,242,255,.05);
+}
+.menu-title { font-size: 13px; letter-spacing: 9px; color:#ff4d7a;
+  text-shadow: 0 0 16px rgba(255,77,122,.85); margin-bottom: 24px; }
+.menu-sub { font-size: 11px; letter-spacing: 4px; color: rgba(140,200,235,.6); margin-bottom: 10px; }
+
+.menu-input {
+  width: 100%; padding: 12px 14px; margin: 8px 0 18px;
+  background: rgba(0,0,0,.4); border: 1px solid rgba(94,242,255,.4);
+  color: #8ff9ff; font-family: inherit; font-size: 16px; letter-spacing: 2px;
+  outline: none; border-radius: 2px;
+}
+.menu-input:focus { border-color: #5ef2ff; box-shadow: 0 0 16px rgba(94,242,255,.5); }
+
+.ship-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 18px; }
+.ship-card {
+  padding: 14px; border: 1px solid rgba(94,242,255,.25);
+  border-radius: 3px; cursor: pointer; transition: all .2s;
+  display: flex; align-items: center; gap: 14px;
+}
+.ship-card:hover { border-color: #5ef2ff; background: rgba(94,242,255,.08); }
+.ship-card.selected { border-color:#5ef2ff; box-shadow: 0 0 20px rgba(94,242,255,.4); }
+.ship-card svg { flex: 0 0 48px; }
+.ship-card .ship-name { font-size: 13px; letter-spacing: 3px; }
+.ship-card .ship-desc { font-size: 10px; letter-spacing: 2px; color: rgba(140,200,235,.6); }
+
+.btn {
+  padding: 13px 34px; background: transparent; border: 1.5px solid #5ef2ff;
+  color: #5ef2ff; font-family: inherit; font-size: 14px; letter-spacing: 4px;
+  cursor: pointer; border-radius: 2px;
+  box-shadow: 0 0 16px rgba(94,242,255,.45), inset 0 0 16px rgba(94,242,255,.12);
+  transition: all .2s;
+}
+.btn:hover { background: rgba(94,242,255,.12);
+  box-shadow: 0 0 28px rgba(94,242,255,.85), inset 0 0 24px rgba(94,242,255,.28); }
+.btn.danger { border-color:#ff4d7a; color:#ff4d7a;
+  box-shadow: 0 0 16px rgba(255,77,122,.45), inset 0 0 16px rgba(255,77,122,.12); }
+.btn.danger:hover { background: rgba(255,77,122,.12); }
+
+.menu-error { min-height: 18px; font-size: 11px; letter-spacing: 2px; color:#ff4d7a; margin-bottom: 8px; }
+.menu-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.menu-hint { margin-top: 18px; font-size: 10px; letter-spacing: 3px; color: rgba(140,200,235,.35); }
