@@ -1,24 +1,241 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>НЕОН · КОСМОС</title>
-  <link rel="stylesheet" href="styles/main.css">
-  <link rel="stylesheet" href="styles/menu.css">
-  <link rel="stylesheet" href="styles/hangar.css">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Fluffy Pilots — Вход</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+    color: #1f2937;
+  }
+  .card {
+    width: 100%;
+    max-width: 400px;
+    background: #fff;
+    border-radius: 16px;
+    padding: 32px 28px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+  }
+  h1 {
+    margin: 0 0 8px;
+    font-size: 22px;
+    text-align: center;
+  }
+  .subtitle {
+    text-align: center;
+    color: #6b7280;
+    font-size: 14px;
+    margin-bottom: 24px;
+  }
+  .tabs {
+    display: flex;
+    background: #f3f4f6;
+    border-radius: 10px;
+    padding: 4px;
+    margin-bottom: 20px;
+  }
+  .tabs button {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 10px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    color: #6b7280;
+    transition: 0.2s;
+  }
+  .tabs button.active {
+    background: #fff;
+    color: #111827;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+  }
+  form { display: flex; flex-direction: column; gap: 12px; }
+  input {
+    padding: 12px 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    font-size: 15px;
+    outline: none;
+    transition: 0.2s;
+  }
+  input:focus { border-color: #2575fc; box-shadow: 0 0 0 3px rgba(37,117,252,0.15); }
+  .btn {
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    background: #2575fc;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  .btn:hover { background: #1e63d6; }
+  .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  .btn-secondary {
+    background: #ef4444;
+  }
+  .btn-secondary:hover { background: #dc2626; }
+  .message {
+    min-height: 20px;
+    font-size: 14px;
+    text-align: center;
+    margin-top: 12px;
+  }
+  .error { color: #dc2626; }
+  .success { color: #16a34a; }
+  .hidden { display: none !important; }
+  .user-box { text-align: center; }
+  .user-box p { color: #6b7280; margin: 8px 0 20px; }
+</style>
 </head>
 <body>
-<div id="cosmo-game" style="display:none">
-  <canvas id="cosmo-canvas"></canvas>
-  <div id="cosmo-overlay">
-    <div class="cosmo-tag">СИГНАЛ ПОТЕРЯН</div>
-    <div class="cosmo-label">ПРОЛЕТЕНО</div>
-    <div class="cosmo-score"><span id="cosmo-final-score">0</span><em>св. лет</em></div>
-    <button id="cosmo-restart">В АНГАР</button>
-    <div class="cosmo-hint">ИЛИ НАЖМИ ENTER</div>
+  <div class="card">
+    <!-- Экран авторизации -->
+    <div id="authScreen">
+      <h1>🐰 Fluffy Pilots</h1>
+      <p class="subtitle">Войдите, чтобы играть</p>
+
+      <div class="tabs">
+        <button id="tabLogin" class="active" type="button">Вход</button>
+        <button id="tabRegister" type="button">Регистрация</button>
+      </div>
+
+      <form id="authForm">
+        <input type="email" id="email" placeholder="Email" required autocomplete="email" />
+        <input type="password" id="password" placeholder="Пароль (мин. 6 символов)" required autocomplete="current-password" />
+        <button type="submit" class="btn" id="submitBtn">Войти</button>
+      </form>
+
+      <div class="message" id="message"></div>
+    </div>
+
+    <!-- Экран после входа -->
+    <div id="userScreen" class="hidden user-box">
+      <h1>👋 С возвращением!</h1>
+      <p id="userEmail"></p>
+      <button class="btn btn-secondary" id="logoutBtn">Выйти</button>
+    </div>
   </div>
-</div>
-<script type="module" src="src/main.js"></script>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import {
+    getAuth,
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
+    onAuthStateChanged,
+    signOut
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCuRoWVmUkhNNXdR1l_y9ouzz9jEoSi6c0",
+    authDomain: "fluffypilots-9b9d6.firebaseapp.com",
+    projectId: "fluffypilots-9b9d6",
+    storageBucket: "fluffypilots-9b9d6.firebasestorage.app",
+    messagingSenderId: "386734053785",
+    appId: "1:386734053785:web:1e9654f84f0b1e72029b08",
+    measurementId: "G-G6JD44R88K"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+
+  // === UI ===
+  const tabLogin = document.getElementById('tabLogin');
+  const tabRegister = document.getElementById('tabRegister');
+  const form = document.getElementById('authForm');
+  const emailInput = document.getElementById('email');
+  const passwordInput = document.getElementById('password');
+  const submitBtn = document.getElementById('submitBtn');
+  const message = document.getElementById('message');
+  const authScreen = document.getElementById('authScreen');
+  const userScreen = document.getElementById('userScreen');
+  const userEmail = document.getElementById('userEmail');
+  const logoutBtn = document.getElementById('logoutBtn');
+
+  let mode = 'login'; // 'login' | 'register'
+
+  function setMode(newMode) {
+    mode = newMode;
+    tabLogin.classList.toggle('active', mode === 'login');
+    tabRegister.classList.toggle('active', mode === 'register');
+    submitBtn.textContent = mode === 'login' ? 'Войти' : 'Зарегистрироваться';
+    passwordInput.autocomplete = mode === 'login' ? 'current-password' : 'new-password';
+    message.textContent = '';
+  }
+
+  tabLogin.addEventListener('click', () => setMode('login'));
+  tabRegister.addEventListener('click', () => setMode('register'));
+
+  function showMessage(text, type = 'error') {
+    message.textContent = text;
+    message.className = `message ${type}`;
+  }
+
+  // Перевод кодов ошибок Firebase в человеческий язык
+  function translateError(code) {
+    const map = {
+      'auth/invalid-email': 'Некорректный email.',
+      'auth/user-not-found': 'Пользователь с таким email не найден.',
+      'auth/wrong-password': 'Неверный пароль.',
+      'auth/invalid-credential': 'Неверный email или пароль.',
+      'auth/email-already-in-use': 'Этот email уже зарегистрирован.',
+      'auth/weak-password': 'Пароль слишком слабый (минимум 6 символов).',
+      'auth/too-many-requests': 'Слишком много попыток. Попробуйте позже.',
+      'auth/network-request-failed': 'Ошибка сети. Проверьте интернет.'
+    };
+    return map[code] || 'Что-то пошло не так. Попробуйте снова.';
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+
+    submitBtn.disabled = true;
+    showMessage('Подождите...', 'success');
+
+    try {
+      if (mode === 'register') {
+        await createUserWithEmailAndPassword(auth, email, password);
+      } else {
+        await signInWithEmailAndPassword(auth, email, password);
+      }
+      form.reset();
+      showMessage('');
+    } catch (err) {
+      showMessage(translateError(err.code));
+    } finally {
+      submitBtn.disabled = false;
+    }
+  });
+
+  logoutBtn.addEventListener('click', async () => {
+    await signOut(auth);
+  });
+
+  // Отслеживаем состояние авторизации
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      authScreen.classList.add('hidden');
+      userScreen.classList.remove('hidden');
+      userEmail.textContent = user.email;
+    } else {
+      authScreen.classList.remove('hidden');
+      userScreen.classList.add('hidden');
+      userEmail.textContent = '';
+    }
+  });
+</script>
 </body>
 </html>
