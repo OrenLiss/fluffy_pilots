@@ -9,6 +9,15 @@ body {
   overflow: hidden;
 }
 
+/* ====== ПИКСЕЛЬ-АРТ (для ВСЕХ будущих картинок) ====== */
+.pixel-art {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  display: block;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
 /* ====== ЭКРАНЫ ====== */
 .screen {
   position: fixed;
@@ -19,7 +28,7 @@ body {
 }
 .hidden { display: none !important; }
 
-/* ====== ЭКРАН АВТОРИЗАЦИИ (как было) ====== */
+/* ====== ЭКРАН АВТОРИЗАЦИИ ====== */
 #screen-auth {
   background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
   color: #1f2937;
@@ -80,7 +89,7 @@ body {
   overflow-y: auto;
 }
 
-/* --- Корабль --- */
+/* --- Корабль (картинка) --- */
 .ship-area {
   height: 180px;
   display: flex;
@@ -88,37 +97,13 @@ body {
   justify-content: center;
   position: relative;
 }
-.ship {
-  position: relative;
-  width: 140px;
-  height: 100px;
-  animation: float 3s ease-in-out infinite;
+.ship-img {
+  animation: drift 4s ease-in-out infinite;
   filter: drop-shadow(0 0 12px #00e0ff) drop-shadow(0 0 24px #00e0ff88);
 }
-@keyframes float {
-  0%, 100% { transform: translateY(-6px); }
-  50%      { transform: translateY(6px); }
-}
-.ship-body {
-  position: absolute; inset: 20% 30% 10% 30%;
-  background: linear-gradient(180deg, #b6f7ff, #00b3d6);
-  border-radius: 50% 50% 40% 40% / 60% 60% 40% 40%;
-}
-.ship-wing {
-  position: absolute; top: 45%; width: 40%; height: 20%;
-  background: linear-gradient(180deg, #7feaff, #007a99);
-}
-.ship-wing-left  { left: 0;  transform: skewY(15deg);  border-radius: 40% 0 0 40%; }
-.ship-wing-right { right: 0; transform: skewY(-15deg); border-radius: 0 40% 40% 0; }
-.ship-engine {
-  position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%);
-  width: 30px; height: 30px; border-radius: 50%;
-  background: radial-gradient(circle, #fff, #00e0ff 40%, transparent 70%);
-  animation: pulse 1s ease-in-out infinite;
-}
-@keyframes pulse {
-  0%, 100% { transform: translateX(-50%) scale(0.9); opacity: 0.8; }
-  50%      { transform: translateX(-50%) scale(1.15); opacity: 1; }
+@keyframes drift {
+  0%, 100% { transform: translate(0, -4px); }
+  50%      { transform: translate(0, 4px); }
 }
 
 /* --- Характеристики --- */
@@ -171,7 +156,7 @@ body {
   filter: drop-shadow(0 0 6px #000);
 }
 
-/* Планеты — рисуем градиентами */
+/* Планеты — пока CSS-градиенты, потом заменим на PNG */
 .planet {
   width: 100%; height: 100%; border-radius: 50%;
   position: relative;

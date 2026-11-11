@@ -35,13 +35,10 @@
 
       <!-- Корабль (сверху) -->
       <div class="ship-area">
-        <div class="ship" id="ship">
-          <!-- корабль рисуем CSS/SVG, потом заменишь картинкой -->
-          <div class="ship-body"></div>
-          <div class="ship-wing ship-wing-left"></div>
-          <div class="ship-wing ship-wing-right"></div>
-          <div class="ship-engine"></div>
-        </div>
+        <img src="assets/ships/starter-ship-side.png"
+             class="pixel-art ship-img"
+             alt="Стартовый корабль"
+             width="256" height="92">
       </div>
 
       <!-- Характеристики -->
@@ -86,9 +83,9 @@
       <!-- Технические кнопки -->
       <div class="tech-buttons">
         <button class="btn btn-secondary" id="logoutBtn">Выйти</button>
-        <button class="btn btn-ghost" id="settingsBtn">⚙ Настройки</button>
-        <button class="btn btn-ghost" id="profileBtn">👤 Профиль</button>
-        <button class="btn btn-primary" id="playBtn">🚀 В полёт</button>
+        <button class="btn btn-ghost" id="settingsBtn">Настройки</button>
+        <button class="btn btn-ghost" id="profileBtn">Профиль</button>
+        <button class="btn btn-primary" id="playBtn">В полёт</button>
       </div>
 
       <p class="user-email" id="userEmail"></p>
