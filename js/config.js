@@ -1,6 +1,6 @@
 // Единые константы игры
 export const SIZES = {
-  ship: { width: 128, height: 128 }, // исходник 128×128, на canvas 1:1
+  ship: { width: 128, height: 48 }, // исходник 128×128, на canvas 1:1
 };
 
 export const GAME = {
@@ -13,8 +13,8 @@ export const GAME = {
 
   // Скорость
   START_SPEED: 1.0,            // км/с
-  ACCEL_PER_SEC: 0.035,        // +км/с за секунду (плавно до бесконечности)
-  DISTANCE_MULTIPLIER: 4,      // 1 ед. скорости/сек = 4 км (чтобы дистанция росла заметно)
+  ACCEL_PER_SEC: 0.06,        // +км/с за секунду (плавно до бесконечности)
+  DISTANCE_MULTIPLIER:1 ,      // 1 ед. скорости/сек = 1 км
 
   // Стрельба
   FIRE_INTERVAL: 0.18,         // сек
@@ -25,6 +25,7 @@ export const GAME = {
   ENEMY_SPAWN_INTERVAL: 3.0,    // сек
   ENEMY_FIRE_INTERVAL: 1.6,     // сек
   ENEMY_BULLET_SPEED: 220,      // px/сек
+  SPEED_TO_ENEMY_BULLET: 60,
 
   // Экономика
   CREDIT_PER_KILL: 5,

@@ -98,8 +98,8 @@ function resize() {
     mouse.x = state.ship.x;
     mouse.y = state.ship.y;
   }
-  state.ship.x = Math.max(state.ship.w / 2, Math.min(rect.width - state.ship.w / 2, state.ship.x));
-  state.ship.y = Math.max(state.ship.h / 2, Math.min(rect.height - state.ship.h / 2, state.ship.y));
+  state.ship.x = Math.max(0, Math.min(rect.width, state.ship.x));
+  state.ship.y = Math.max(0, Math.min(rect.height, state.ship.y));
 }
 
 function onPointer(e) {
@@ -282,8 +282,8 @@ function update(dt) {
 
   const halfW = state.ship.w / 2;
   const halfH = state.ship.h / 2;
-  state.ship.x = Math.max(halfW, Math.min(state.canvasW - halfW, state.ship.x));
-  state.ship.y = Math.max(halfH, Math.min(state.canvasH - halfH, state.ship.y));
+  state.ship.x = Math.max(0, Math.min(state.canvasW, state.ship.x));
+  state.ship.y = Math.max(0, Math.min(state.canvasH, state.ship.y));
 
   state.fireCooldown -= dt;
   if (state.fireCooldown <= 0) {
@@ -326,15 +326,15 @@ function update(dt) {
     const e = state.enemies[i];
     e.y += (baseFall * 0.7) * dt;
     e.fireTimer -= dt;
-    if (e.fireTimer <= 0 && e.y > 0) {
-      e.fireTimer = GAME.ENEMY_FIRE_INTERVAL;
-      state.enemyBullets.push({
-        x: e.x, y: e.y + e.h / 2,
-        vy: GAME.ENEMY_BULLET_SPEED, r: 4,
-      });
-    }
-    if (e.y - e.h / 2 > state.canvasH + 20) state.enemies.splice(i, 1);
-  }
+   if (e.fireTimer <= 0 && e.y > 0) {
+  e.fireTimer = GAME.ENEMY_FIRE_INTERVAL;
+  state.enemyBullets.push({
+    x: e.x,
+    y: e.y + e.h / 2,
+    vy: GAME.ENEMY_BULLET_SPEED + state.speed * GAME.SPEED_TO_ENEMY_BULLET,
+    r: 4,
+  });
+}
 
   for (let i = state.playerBullets.length - 1; i >= 0; i--) {
     const b = state.playerBullets[i];
