@@ -6,6 +6,7 @@ import { initInput } from './input.js';
 import { update, drawGame, gameOver, restart } from './game.js';
 import { S } from './state.js';
 import { CFG } from './config.js';
+import { showAuthScreen } from './auth.js'; // НОВЫЙ ИМПОРТ
 
 function startGame() {
   let returnTimeout = null; // Храним ID таймера возврата в ангар
@@ -111,8 +112,20 @@ function startGame() {
   menu.show(loadProfile());
 }
 
+// --- НОВЫЙ БЛОК ЗАПУСКА ---
+async function boot() {
+  try {
+    // Ждем, пока игрок введет ник и пароль в форме
+    await showAuthScreen();
+    // Как только форма закрылась (успешный вход) — запускаем игру
+    startGame();
+  } catch (e) {
+    console.error("Ошибка авторизации:", e);
+  }
+}
+
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', startGame);
+  document.addEventListener('DOMContentLoaded', boot);
 } else {
-  startGame();
+  boot();
 }
