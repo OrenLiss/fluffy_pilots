@@ -20,22 +20,21 @@ export function initHangar() {
   settingsBtn.addEventListener("click", () => console.log("Открыть настройки (заглушка)"));
   profileBtn.addEventListener("click", () => console.log("Открыть профиль (заглушка)"));
 
-  playBtn.addEventListener("click", () => {
-    const active = document.querySelector(".zone.active");
-    if (!active) return;
-    if (active.dataset.zone !== "space") return;
-    document.getElementById("screen-hangar").classList.add("hidden");
-    document.getElementById("screen-game").classList.remove("hidden");
-    requestAnimationFrame(() => startGame());
-  });
+playBtn.addEventListener("click", () => {
+  const active = document.querySelector(".zone.active");
+  if (!active) return;
+  if (active.dataset.zone !== "space") return;
 
-  zones.forEach((zone) => {
-    zone.addEventListener("click", () => {
-      if (zone.classList.contains("locked")) return;
-      zones.forEach((z) => z.classList.remove("active"));
-      zone.classList.add("active");
+  document.getElementById("screen-hangar").classList.add("hidden");
+  document.getElementById("screen-game").classList.remove("hidden");
+
+  // Двойной rAF: гарантирует, что браузер пересчитал layout
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      startGame();
     });
   });
+});
 
   // Обновляем баланс, когда возвращаемся из полёта
   document.addEventListener("profile-updated", refreshCredits);

@@ -78,6 +78,14 @@ export function initGame() {
 function resize() {
   const dpr = window.devicePixelRatio || 1;
   const rect = canvas.getBoundingClientRect();
+
+  // Если canvas ещё не отрисован (0×0) — пробуем на следующем кадре
+  if (rect.width === 0 || rect.height === 0) {
+    console.warn("canvas 0×0, retry...");
+    requestAnimationFrame(resize);
+    return;
+  }
+
   canvas.width = rect.width * dpr;
   canvas.height = rect.height * dpr;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -121,6 +129,9 @@ function buildStars() {
 
 // ====== СТАРТ / ПАУЗА / КОНЕЦ ======
 export function startGame() {
+  // Пересчитываем canvas ПЕРЕД инициализацией игры
+  resize();
+
   state.running = true;
   state.paused = false;
   state.gameOver = false;
@@ -186,7 +197,6 @@ async function finishFlight(viaPause) {
     distance: Math.floor(state.distance),
   };
 
-  // Показываем индикатор в кнопках, чтобы юзер понял, что идёт сохранение
   const btn = viaPause
     ? document.getElementById("pauseToHangarBtn")
     : document.getElementById("goToHangarBtn");
@@ -198,7 +208,6 @@ async function finishFlight(viaPause) {
     await rewardFlight(payload);
   } catch (err) {
     console.error("Не удалось сохранить профиль:", err);
-    // Можно показать маленький алерт, но мы просто продолжим
   } finally {
     btn.disabled = false;
     btn.textContent = originalText;
@@ -208,10 +217,8 @@ async function finishFlight(viaPause) {
     if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
     document.getElementById("pauseOverlay").classList.add("hidden");
     document.getElementById("gameOverOverlay").classList.add("hidden");
-    // Возврат в ангар + подгрузка баланса
     document.getElementById("screen-game").classList.add("hidden");
     document.getElementById("screen-hangar").classList.remove("hidden");
-    // Сообщаем ангару, что нужно обновить кредиты
     document.dispatchEvent(new CustomEvent("profile-updated"));
   }
 }
@@ -239,7 +246,6 @@ function update(dt) {
   state.speed += GAME.ACCEL_PER_SEC * dt;
   state.distance += state.speed * dt * GAME.DISTANCE_MULTIPLIER;
 
-  // Кредиты за каждые 10 км
   const deserved = Math.floor(state.distance / 10) * GAME.CREDIT_PER_10KM;
   if (deserved > state.creditsFromDistance) {
     const diff = deserved - state.creditsFromDistance;
@@ -263,7 +269,6 @@ function update(dt) {
     state.shieldRegenTimer = 0;
   }
 
-  // Управление
   const kx = (input.keys.has("a") || input.keys.has("arrowleft") ? -1 : 0)
            + (input.keys.has("d") || input.keys.has("arrowright") ? 1 : 0);
   const ky = (input.keys.has("w") || input.keys.has("arrowup") ? -1 : 0)
@@ -280,7 +285,6 @@ function update(dt) {
   state.ship.x = Math.max(halfW, Math.min(state.canvasW - halfW, state.ship.x));
   state.ship.y = Math.max(halfH, Math.min(state.canvasH - halfH, state.ship.y));
 
-  // Стрельба
   state.fireCooldown -= dt;
   if (state.fireCooldown <= 0) {
     state.fireCooldown = GAME.FIRE_INTERVAL;
@@ -290,7 +294,6 @@ function update(dt) {
     });
   }
 
-  // Спавн
   state.spawnAsteroidTimer -= dt;
   if (state.spawnAsteroidTimer <= 0) {
     state.spawnAsteroidTimer = GAME.ASTEROID_SPAWN_INTERVAL;
@@ -333,7 +336,6 @@ function update(dt) {
     if (e.y - e.h / 2 > state.canvasH + 20) state.enemies.splice(i, 1);
   }
 
-  // Пули игрока
   for (let i = state.playerBullets.length - 1; i >= 0; i--) {
     const b = state.playerBullets[i];
     let removed = false;
@@ -365,7 +367,6 @@ function update(dt) {
     }
   }
 
-  // Астероиды vs корабль
   for (let i = state.asteroids.length - 1; i >= 0; i--) {
     const a = state.asteroids[i];
     const dx = a.x - state.ship.x, dy = a.y - state.ship.y;
@@ -375,7 +376,6 @@ function update(dt) {
       if (!state.running) return;
     }
   }
-  // Вражеские пули vs корабль
   for (let i = state.enemyBullets.length - 1; i >= 0; i--) {
     const b = state.enemyBullets[i];
     const dx = b.x - state.ship.x, dy = b.y - state.ship.y;
@@ -385,7 +385,6 @@ function update(dt) {
       if (!state.running) return;
     }
   }
-  // Враги vs корабль
   for (let i = state.enemies.length - 1; i >= 0; i--) {
     const e = state.enemies[i];
     if (Math.abs(e.x - state.ship.x) < (e.w / 2 + halfW) &&
