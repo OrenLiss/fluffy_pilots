@@ -1,107 +1,16 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fluffy Pilots — Вход</title>
-<style>
-  * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
-    color: #1f2937;
-  }
-  .card {
-    width: 100%;
-    max-width: 400px;
-    background: #fff;
-    border-radius: 16px;
-    padding: 32px 28px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.25);
-  }
-  h1 {
-    margin: 0 0 8px;
-    font-size: 22px;
-    text-align: center;
-  }
-  .subtitle {
-    text-align: center;
-    color: #6b7280;
-    font-size: 14px;
-    margin-bottom: 24px;
-  }
-  .tabs {
-    display: flex;
-    background: #f3f4f6;
-    border-radius: 10px;
-    padding: 4px;
-    margin-bottom: 20px;
-  }
-  .tabs button {
-    flex: 1;
-    border: none;
-    background: transparent;
-    padding: 10px;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    color: #6b7280;
-    transition: 0.2s;
-  }
-  .tabs button.active {
-    background: #fff;
-    color: #111827;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-  }
-  form { display: flex; flex-direction: column; gap: 12px; }
-  input {
-    padding: 12px 14px;
-    border: 1px solid #d1d5db;
-    border-radius: 10px;
-    font-size: 15px;
-    outline: none;
-    transition: 0.2s;
-  }
-  input:focus { border-color: #2575fc; box-shadow: 0 0 0 3px rgba(37,117,252,0.15); }
-  .btn {
-    padding: 12px;
-    border: none;
-    border-radius: 10px;
-    background: #2575fc;
-    color: #fff;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: 0.2s;
-  }
-  .btn:hover { background: #1e63d6; }
-  .btn:disabled { opacity: 0.6; cursor: not-allowed; }
-  .btn-secondary {
-    background: #ef4444;
-  }
-  .btn-secondary:hover { background: #dc2626; }
-  .message {
-    min-height: 20px;
-    font-size: 14px;
-    text-align: center;
-    margin-top: 12px;
-  }
-  .error { color: #dc2626; }
-  .success { color: #16a34a; }
-  .hidden { display: none !important; }
-  .user-box { text-align: center; }
-  .user-box p { color: #6b7280; margin: 8px 0 20px; }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fluffy Pilots</title>
+  <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-  <div class="card">
-    <!-- Экран авторизации -->
-    <div id="authScreen">
+
+  <!-- ====== ЭКРАН АВТОРИЗАЦИИ ====== -->
+  <section id="screen-auth" class="screen">
+    <div class="card">
       <h1>🐰 Fluffy Pilots</h1>
       <p class="subtitle">Войдите, чтобы играть</p>
 
@@ -118,124 +27,75 @@
 
       <div class="message" id="message"></div>
     </div>
+  </section>
 
-    <!-- Экран после входа -->
-    <div id="userScreen" class="hidden user-box">
-      <h1>👋 С возвращением!</h1>
-      <p id="userEmail"></p>
-      <button class="btn btn-secondary" id="logoutBtn">Выйти</button>
+  <!-- ====== ЭКРАН АНГАРА ====== -->
+  <section id="screen-hangar" class="screen hidden">
+    <div class="hangar">
+
+      <!-- Корабль (сверху) -->
+      <div class="ship-area">
+        <div class="ship" id="ship">
+          <!-- корабль рисуем CSS/SVG, потом заменишь картинкой -->
+          <div class="ship-body"></div>
+          <div class="ship-wing ship-wing-left"></div>
+          <div class="ship-wing ship-wing-right"></div>
+          <div class="ship-engine"></div>
+        </div>
+      </div>
+
+      <!-- Характеристики -->
+      <div class="stats">
+        <div class="stat">
+          <span class="stat-label">Скорость</span>
+          <div class="stat-bar"><div class="stat-fill" style="width: 40%"></div></div>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Прочность</span>
+          <div class="stat-bar"><div class="stat-fill" style="width: 60%"></div></div>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Атака</span>
+          <div class="stat-bar"><div class="stat-fill" style="width: 30%"></div></div>
+        </div>
+      </div>
+
+      <!-- Выбор территории -->
+      <div class="zones">
+        <div class="zone locked" data-zone="planet-1" title="Скоро">
+          <div class="planet planet-1"></div>
+          <span class="lock">🔒</span>
+        </div>
+        <div class="zone locked" data-zone="planet-2" title="Скоро">
+          <div class="planet planet-2"></div>
+          <span class="lock">🔒</span>
+        </div>
+        <div class="zone active" data-zone="space" title="Космос">
+          <div class="planet space"></div>
+        </div>
+        <div class="zone locked" data-zone="planet-3" title="Скоро">
+          <div class="planet planet-3"></div>
+          <span class="lock">🔒</span>
+        </div>
+        <div class="zone locked" data-zone="planet-4" title="Скоро">
+          <div class="planet planet-4"></div>
+          <span class="lock">🔒</span>
+        </div>
+      </div>
+
+      <!-- Технические кнопки -->
+      <div class="tech-buttons">
+        <button class="btn btn-secondary" id="logoutBtn">Выйти</button>
+        <button class="btn btn-ghost" id="settingsBtn">⚙ Настройки</button>
+        <button class="btn btn-ghost" id="profileBtn">👤 Профиль</button>
+        <button class="btn btn-primary" id="playBtn">🚀 В полёт</button>
+      </div>
+
+      <p class="user-email" id="userEmail"></p>
     </div>
-  </div>
+  </section>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import {
-    getAuth,
-    createUserWithEmailAndPassword,
-    signInWithEmailAndPassword,
-    onAuthStateChanged,
-    signOut
-  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyCuRoWVmUkhNNXdR1l_y9ouzz9jEoSi6c0",
-    authDomain: "fluffypilots-9b9d6.firebaseapp.com",
-    projectId: "fluffypilots-9b9d6",
-    storageBucket: "fluffypilots-9b9d6.firebasestorage.app",
-    messagingSenderId: "386734053785",
-    appId: "1:386734053785:web:1e9654f84f0b1e72029b08",
-    measurementId: "G-G6JD44R88K"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-
-  // === UI ===
-  const tabLogin = document.getElementById('tabLogin');
-  const tabRegister = document.getElementById('tabRegister');
-  const form = document.getElementById('authForm');
-  const emailInput = document.getElementById('email');
-  const passwordInput = document.getElementById('password');
-  const submitBtn = document.getElementById('submitBtn');
-  const message = document.getElementById('message');
-  const authScreen = document.getElementById('authScreen');
-  const userScreen = document.getElementById('userScreen');
-  const userEmail = document.getElementById('userEmail');
-  const logoutBtn = document.getElementById('logoutBtn');
-
-  let mode = 'login'; // 'login' | 'register'
-
-  function setMode(newMode) {
-    mode = newMode;
-    tabLogin.classList.toggle('active', mode === 'login');
-    tabRegister.classList.toggle('active', mode === 'register');
-    submitBtn.textContent = mode === 'login' ? 'Войти' : 'Зарегистрироваться';
-    passwordInput.autocomplete = mode === 'login' ? 'current-password' : 'new-password';
-    message.textContent = '';
-  }
-
-  tabLogin.addEventListener('click', () => setMode('login'));
-  tabRegister.addEventListener('click', () => setMode('register'));
-
-  function showMessage(text, type = 'error') {
-    message.textContent = text;
-    message.className = `message ${type}`;
-  }
-
-  // Перевод кодов ошибок Firebase в человеческий язык
-  function translateError(code) {
-    const map = {
-      'auth/invalid-email': 'Некорректный email.',
-      'auth/user-not-found': 'Пользователь с таким email не найден.',
-      'auth/wrong-password': 'Неверный пароль.',
-      'auth/invalid-credential': 'Неверный email или пароль.',
-      'auth/email-already-in-use': 'Этот email уже зарегистрирован.',
-      'auth/weak-password': 'Пароль слишком слабый (минимум 6 символов).',
-      'auth/too-many-requests': 'Слишком много попыток. Попробуйте позже.',
-      'auth/network-request-failed': 'Ошибка сети. Проверьте интернет.'
-    };
-    return map[code] || 'Что-то пошло не так. Попробуйте снова.';
-  }
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = emailInput.value.trim();
-    const password = passwordInput.value;
-
-    submitBtn.disabled = true;
-    showMessage('Подождите...', 'success');
-
-    try {
-      if (mode === 'register') {
-        await createUserWithEmailAndPassword(auth, email, password);
-      } else {
-        await signInWithEmailAndPassword(auth, email, password);
-      }
-      form.reset();
-      showMessage('');
-    } catch (err) {
-      showMessage(translateError(err.code));
-    } finally {
-      submitBtn.disabled = false;
-    }
-  });
-
-  logoutBtn.addEventListener('click', async () => {
-    await signOut(auth);
-  });
-
-  // Отслеживаем состояние авторизации
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      authScreen.classList.add('hidden');
-      userScreen.classList.remove('hidden');
-      userEmail.textContent = user.email;
-    } else {
-      authScreen.classList.remove('hidden');
-      userScreen.classList.add('hidden');
-      userEmail.textContent = '';
-    }
-  });
-</script>
+  <!-- Скрипты -->
+  <script type="module" src="js/main.js"></script>
 </body>
 </html>

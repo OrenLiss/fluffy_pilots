@@ -1,0 +1,213 @@
+/* ====== СБРОС ====== */
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: #05060f;
+  color: #e6f1ff;
+  overflow: hidden;
+}
+
+/* ====== ЭКРАНЫ ====== */
+.screen {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.hidden { display: none !important; }
+
+/* ====== ЭКРАН АВТОРИЗАЦИИ (как было) ====== */
+#screen-auth {
+  background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+  color: #1f2937;
+}
+#screen-auth .card {
+  width: 100%;
+  max-width: 400px;
+  background: #fff;
+  border-radius: 16px;
+  padding: 32px 28px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+#screen-auth h1 { margin: 0 0 8px; font-size: 22px; text-align: center; }
+#screen-auth .subtitle { text-align: center; color: #6b7280; font-size: 14px; margin-bottom: 24px; }
+#screen-auth .tabs { display: flex; background: #f3f4f6; border-radius: 10px; padding: 4px; margin-bottom: 20px; }
+#screen-auth .tabs button {
+  flex: 1; border: none; background: transparent; padding: 10px;
+  border-radius: 8px; font-weight: 600; cursor: pointer; color: #6b7280; transition: 0.2s;
+}
+#screen-auth .tabs button.active { background: #fff; color: #111827; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+#screen-auth form { display: flex; flex-direction: column; gap: 12px; }
+#screen-auth input {
+  padding: 12px 14px; border: 1px solid #d1d5db; border-radius: 10px;
+  font-size: 15px; outline: none; transition: 0.2s;
+}
+#screen-auth input:focus { border-color: #2575fc; box-shadow: 0 0 0 3px rgba(37,117,252,0.15); }
+#screen-auth .message { min-height: 20px; font-size: 14px; text-align: center; margin-top: 12px; }
+#screen-auth .error { color: #dc2626; }
+#screen-auth .success { color: #16a34a; }
+
+/* ====== КНОПКИ (общие) ====== */
+.btn {
+  padding: 12px; border: none; border-radius: 10px;
+  font-size: 15px; font-weight: 600; cursor: pointer; transition: 0.2s;
+}
+#screen-auth .btn { background: #2575fc; color: #fff; }
+#screen-auth .btn:hover { background: #1e63d6; }
+#screen-auth .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* ====== ЭКРАН АНГАРА ====== */
+#screen-hangar {
+  background:
+    radial-gradient(ellipse at top, rgba(0, 200, 255, 0.12), transparent 60%),
+    radial-gradient(ellipse at bottom, rgba(180, 0, 255, 0.12), transparent 60%),
+    #05060f;
+  align-items: stretch;
+  justify-content: stretch;
+}
+
+.hangar {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  overflow-y: auto;
+}
+
+/* --- Корабль --- */
+.ship-area {
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.ship {
+  position: relative;
+  width: 140px;
+  height: 100px;
+  animation: float 3s ease-in-out infinite;
+  filter: drop-shadow(0 0 12px #00e0ff) drop-shadow(0 0 24px #00e0ff88);
+}
+@keyframes float {
+  0%, 100% { transform: translateY(-6px); }
+  50%      { transform: translateY(6px); }
+}
+.ship-body {
+  position: absolute; inset: 20% 30% 10% 30%;
+  background: linear-gradient(180deg, #b6f7ff, #00b3d6);
+  border-radius: 50% 50% 40% 40% / 60% 60% 40% 40%;
+}
+.ship-wing {
+  position: absolute; top: 45%; width: 40%; height: 20%;
+  background: linear-gradient(180deg, #7feaff, #007a99);
+}
+.ship-wing-left  { left: 0;  transform: skewY(15deg);  border-radius: 40% 0 0 40%; }
+.ship-wing-right { right: 0; transform: skewY(-15deg); border-radius: 0 40% 40% 0; }
+.ship-engine {
+  position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%);
+  width: 30px; height: 30px; border-radius: 50%;
+  background: radial-gradient(circle, #fff, #00e0ff 40%, transparent 70%);
+  animation: pulse 1s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { transform: translateX(-50%) scale(0.9); opacity: 0.8; }
+  50%      { transform: translateX(-50%) scale(1.15); opacity: 1; }
+}
+
+/* --- Характеристики --- */
+.stats {
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 16px 18px;
+  background: rgba(10, 20, 40, 0.6);
+  border: 1px solid rgba(0, 224, 255, 0.25);
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(0, 224, 255, 0.08) inset;
+}
+.stat { display: flex; align-items: center; gap: 12px; }
+.stat-label {
+  width: 100px; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;
+  color: #7feaff;
+}
+.stat-bar {
+  flex: 1; height: 12px; border-radius: 6px;
+  background: rgba(255,255,255,0.08);
+  overflow: hidden;
+  border: 1px solid rgba(0, 224, 255, 0.3);
+}
+.stat-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #00e0ff, #b67dff);
+  box-shadow: 0 0 12px #00e0ffaa;
+  transition: width 0.4s ease;
+}
+
+/* --- Зоны / планеты --- */
+.zones {
+  display: flex; justify-content: center; align-items: center;
+  gap: 16px; padding: 12px 0;
+  flex-wrap: wrap;
+}
+.zone {
+  position: relative;
+  width: 90px; height: 90px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.zone:hover:not(.locked) { transform: scale(1.08); }
+.zone.locked { cursor: not-allowed; opacity: 0.6; }
+.zone.active { outline: 2px solid #00e0ff; outline-offset: 4px; box-shadow: 0 0 24px #00e0ff88; }
+.lock {
+  position: absolute; bottom: -6px; right: -6px;
+  font-size: 18px;
+  filter: drop-shadow(0 0 6px #000);
+}
+
+/* Планеты — рисуем градиентами */
+.planet {
+  width: 100%; height: 100%; border-radius: 50%;
+  position: relative;
+}
+.planet-1 { background: radial-gradient(circle at 30% 30%, #ff9d5c, #a12b09); box-shadow: 0 0 20px #ff7a3caa; }
+.planet-2 { background: radial-gradient(circle at 30% 30%, #6ee7b7, #065f46); box-shadow: 0 0 20px #34d399aa; }
+.planet-3 { background: radial-gradient(circle at 30% 30%, #93c5fd, #1e3a8a); box-shadow: 0 0 20px #60a5faaa; }
+.planet-4 { background: radial-gradient(circle at 30% 30%, #f0abfc, #6b21a8); box-shadow: 0 0 20px #e879f9aa; }
+
+.planet.space {
+  background: radial-gradient(circle at 50% 50%, #0f172a 40%, #020617 70%),
+              repeating-radial-gradient(circle at 30% 30%, #fff 0 1px, transparent 1px 20px);
+  box-shadow: 0 0 30px #00e0ffaa, inset 0 0 20px #00e0ff55;
+  border: 1px solid #00e0ff;
+}
+
+/* --- Технические кнопки --- */
+.tech-buttons {
+  display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
+  padding-top: 6px;
+}
+.tech-buttons .btn { min-width: 120px; }
+.btn-primary {
+  background: linear-gradient(90deg, #00e0ff, #b67dff);
+  color: #05060f;
+}
+.btn-primary:hover { filter: brightness(1.15); }
+.btn-secondary { background: #ef4444; color: #fff; }
+.btn-secondary:hover { background: #dc2626; }
+.btn-ghost {
+  background: transparent; color: #7feaff;
+  border: 1px solid rgba(0, 224, 255, 0.4);
+}
+.btn-ghost:hover { background: rgba(0, 224, 255, 0.1); }
+
+.user-email {
+  text-align: center; color: #6b7280; font-size: 12px;
+  margin: 0;
+}
