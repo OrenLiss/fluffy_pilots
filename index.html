@@ -8,7 +8,7 @@
 </head>
 <body>
 
-  <!-- ====== АВТОРИЗАЦИЯ ====== -->
+  <!-- ====== ЭКРАН АВТОРИЗАЦИИ ====== -->
   <section id="screen-auth" class="screen">
     <div class="card">
       <h1>🐰 Fluffy Pilots</h1>
@@ -26,29 +26,41 @@
     </div>
   </section>
 
-  <!-- ====== АНГАР ====== -->
+  <!-- ====== ЭКРАН АНГАРА ====== -->
   <section id="screen-hangar" class="screen hidden">
     <div class="hangar">
-
       <div class="ship-area">
-        <img src="assets/ships/starter-ship-side.png"
-             class="pixel-art ship-img"
-             alt="Стартовый корабль"
-             width="256" height="92">
+        <img src="assets/ships/starter-ship-side.png" class="pixel-art ship-img" alt="Стартовый корабль" width="256" height="92">
       </div>
-
-      <div class="stats">
-        <div class="stat">
+      
+      <div class="stats" id="statsPanel">
+        <div class="stat-row" data-stat="speed">
           <span class="stat-label">Скорость</span>
-          <div class="stat-bar"><div class="stat-fill" style="width: 40%"></div></div>
+          <div class="stat-segments" id="seg-speed"></div>
+          <span class="stat-level" id="lvl-speed">0/10</span>
+          <button class="stat-plus" id="plus-speed" data-stat="speed">+</button>
+          <span class="stat-cost" id="cost-speed">100</span>
         </div>
-        <div class="stat">
+        <div class="stat-row" data-stat="hull">
           <span class="stat-label">Прочность</span>
-          <div class="stat-bar"><div class="stat-fill" style="width: 60%"></div></div>
+          <div class="stat-segments" id="seg-hull"></div>
+          <span class="stat-level" id="lvl-hull">0/10</span>
+          <button class="stat-plus" id="plus-hull" data-stat="hull">+</button>
+          <span class="stat-cost" id="cost-hull">100</span>
         </div>
-        <div class="stat">
-          <span class="stat-label">Атака</span>
-          <div class="stat-bar"><div class="stat-fill" style="width: 30%"></div></div>
+        <div class="stat-row" data-stat="shield">
+          <span class="stat-label">Щиты</span>
+          <div class="stat-segments" id="seg-shield"></div>
+          <span class="stat-level" id="lvl-shield">0/10</span>
+          <button class="stat-plus" id="plus-shield" data-stat="shield">+</button>
+          <span class="stat-cost" id="cost-shield">100</span>
+        </div>
+        <div class="stat-row" data-stat="damage">
+          <span class="stat-label">Урон</span>
+          <div class="stat-segments" id="seg-damage"></div>
+          <span class="stat-level" id="lvl-damage">0/10</span>
+          <button class="stat-plus" id="plus-damage" data-stat="damage">+</button>
+          <span class="stat-cost" id="cost-damage">100</span>
         </div>
       </div>
 
@@ -65,22 +77,52 @@
         <div class="zone locked" data-zone="planet-4" title="Скоро"><div class="planet planet-4"></div><span class="lock">🔒</span></div>
       </div>
 
-      <div class="tech-buttons">
+      <div class="hangar-bottom-row">
         <button class="btn btn-secondary" id="logoutBtn">Выйти</button>
         <button class="btn btn-ghost" id="settingsBtn">⚙ Настройки</button>
         <button class="btn btn-ghost" id="profileBtn">👤 Профиль</button>
-        <button class="btn btn-primary" id="playBtn">🚀 В полёт</button>
       </div>
 
       <p class="user-email" id="userEmail"></p>
     </div>
   </section>
 
-  <!-- ====== ИГРА ====== -->
+  <!-- ====== ЭКРАН МАСТЕРСКОЙ ====== -->
+  <section id="screen-workshop" class="screen hidden">
+    <div class="workshop-layout">
+      
+      <!-- Левая сцена -->
+      <div class="workshop-scene">
+        <video class="layer planet-video" autoplay loop muted playsinline>
+          <source src="assets/bg/planet.webm" type="video/webm">
+        </video>
+        
+        <!-- Обертка для фона, чтобы зафиксировать пропорции -->
+        <div class="workshop-bg-wrapper">
+          <div class="layer workshop-bg" style="background-image: url('assets/bg/workshop-bg.png');"></div>
+          <div class="layer workshop-ship">
+            <img src="assets/ships/starter-ship-side.png" class="pixel-art" alt="Корабль">
+          </div>
+        </div>
+      </div>
+
+      <!-- Правая панель -->
+      <div class="workshop-menu" style="background-image: url('assets/ui/ui-panel-bg.png');">
+        <div class="menu-header">МАСТЕРСКАЯ</div>
+        
+        <!-- Сюда JS будет вставлять карточки -->
+        <div class="menu-list" id="upgradesList"></div>
+        
+        <button class="btn btn-ghost menu-close-btn" id="workshopBackBtn">Назад в ангар</button>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ====== ЭКРАН ИГРЫ ====== -->
   <section id="screen-game" class="screen hidden">
     <div class="game-wrap">
       <canvas id="gameCanvas"></canvas>
-
       <div class="hud" id="hud">
         <div class="hud-item"><span class="hud-label">Скорость</span><span class="hud-val" id="hudSpeed">1.00 км/с</span></div>
         <div class="hud-item"><span class="hud-label">Дистанция</span><span class="hud-val" id="hudDist">0 км</span></div>
@@ -120,6 +162,14 @@
       </div>
     </div>
   </section>
+
+  <!-- ====== НИЖНЯЯ ПАНЕЛЬ НАВИГАЦИИ ====== -->
+  <nav class="bottom-nav hidden" id="mainNav">
+    <button class="nav-btn" id="navToHangar" style="background-image: url('assets/ui/ui-btn-nav.png');">АНГАР</button>
+    <button class="nav-btn" id="navToWorkshop" style="background-image: url('assets/ui/ui-btn-nav.png');">МАСТЕРСКАЯ</button>
+    <button class="nav-btn" id="navToDockyard" style="background-image: url('assets/ui/ui-btn-nav.png');">ВЕРФЬ</button>
+    <button class="nav-btn play-btn" id="navToPlay" style="background-image: url('assets/ui/ui-btn-nav.png');">В ПОЛЁТ</button>
+  </nav>
 
   <script type="module" src="js/main.js"></script>
 </body>

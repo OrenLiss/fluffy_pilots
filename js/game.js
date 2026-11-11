@@ -1,5 +1,6 @@
 // Игровая логика полёта в космосе
-import { SIZES, GAME } from "./config.js";
+import { SIZES, GAME, statFormulas } from "./config.js";
+import { loadProfile } from "./profile.js";
 import { rewardFlight } from "./profile.js";
 
 // ====== СОСТОЯНИЕ ======
@@ -17,12 +18,14 @@ const state = {
 
   shield: GAME.MAX_SHIELD,
   hull: GAME.MAX_HULL,
-  timeSinceDamage: 0,
-  shieldRegenTimer: 0,
-  shieldCooldown: 0,
-  damageFlash: 0,
+  shieldHitsPerSegment: 1,     // сколько попаданий держит 1 сегмент
+  shieldSegmentHp: 1,          // текущее HP активного сегмента
+  shieldBreakCooldown: GAME.SHIELD_BREAK_COOLDOWN,
+  followSpeed: 1.4,
+  bulletDamage: 1,
 
   ship: { x: 0, y: 0, w: 64, h: 24, img: null },
+  enemyImg: null,
 
   playerBullets: [],
   enemyBullets: [],
@@ -69,6 +72,11 @@ export function initGame() {
   img.onload = () => { state.ship.img = img; };
   state.ship.img = img;
 
+  const enemyImg = new Image();
+  enemyImg.src = "assets/ships/enemy-ship-top.png";
+  enemyImg.onload = () => { state.enemyImg = enemyImg; };
+  state.enemyImg = enemyImg;
+
   state.ship.w = SIZES.ship.width;
   state.ship.h = SIZES.ship.height;
 
@@ -79,10 +87,11 @@ function resize() {
   const dpr = window.devicePixelRatio || 1;
   const rect = canvas.getBoundingClientRect();
 
-  // Если canvas ещё не отрисован (0×0) — пробуем на следующем кадре
+  // Если canvas скрыт или 0×0 — просто выходим без повторов.
+  // Реальный пересчёт произойдёт, когда экран игры покажется:
+  //   - при вызове startGame() (там resize() в начале)
+  //   - при изменении окна (window.addEventListener("resize", resize))
   if (rect.width === 0 || rect.height === 0) {
-    console.warn("canvas 0×0, retry...");
-    requestAnimationFrame(resize);
     return;
   }
 
@@ -98,6 +107,8 @@ function resize() {
     mouse.x = state.ship.x;
     mouse.y = state.ship.y;
   }
+
+  // Корабль может уходить на 50% за экран
   state.ship.x = Math.max(0, Math.min(rect.width, state.ship.x));
   state.ship.y = Math.max(0, Math.min(rect.height, state.ship.y));
 }
@@ -128,9 +139,23 @@ function buildStars() {
 }
 
 // ====== СТАРТ / ПАУЗА / КОНЕЦ ======
-export function startGame() {
-  // Пересчитываем canvas ПЕРЕД инициализацией игры
+export async function startGame() {
   resize();
+
+  // Читаем профиль, чтобы подтянуть уровни прокачки
+  let profile = null;
+  try {
+    profile = await loadProfile();
+  } catch (err) {
+    console.warn("Не удалось загрузить профиль для боя, играем с базовыми:", err);
+  }
+  const f = statFormulas(profile);
+
+  state.followSpeed = f.followSpeed;
+  state.maxHull = f.maxHull;
+  state.bulletDamage = f.bulletDamage;
+  state.shieldHitsPerSegment = f.shieldHitsPerSegment;
+  state.shieldBreakCooldown = f.shieldBreakCooldown;
 
   state.running = true;
   state.paused = false;
@@ -143,7 +168,8 @@ export function startGame() {
   state.creditsFromDistance = 0;
   state.kills = 0;
   state.shield = GAME.MAX_SHIELD;
-  state.hull = GAME.MAX_HULL;
+  state.shieldSegmentHp = f.shieldHitsPerSegment;
+  state.hull = f.maxHull;
   state.timeSinceDamage = 0;
   state.shieldRegenTimer = 0;
   state.shieldCooldown = 0;
@@ -186,7 +212,6 @@ function resumeGame() {
   state.lastTime = performance.now();
 }
 
-// Завершение полёта — сохранение и возврат в ангар
 async function finishFlight(viaPause) {
   if (state.saving) return;
   state.saving = true;
@@ -241,11 +266,18 @@ function loop(now) {
   if (state.running || state.paused) rafId = requestAnimationFrame(loop);
 }
 
+// ====== ЛИМИТ ВРАГОВ ======
+function getEnemyLimit() {
+  const isMobile = state.canvasW < GAME.ENEMY_MOBILE_BREAKPOINT;
+  return isMobile ? GAME.ENEMY_MAX_MOBILE : GAME.ENEMY_MAX_DESKTOP;
+}
+
 // ====== ОБНОВЛЕНИЕ ======
 function update(dt) {
   state.speed += GAME.ACCEL_PER_SEC * dt;
   state.distance += state.speed * dt * GAME.DISTANCE_MULTIPLIER;
 
+  // Кредиты за каждые 10 км
   const deserved = Math.floor(state.distance / 10) * GAME.CREDIT_PER_10KM;
   if (deserved > state.creditsFromDistance) {
     const diff = deserved - state.creditsFromDistance;
@@ -264,11 +296,14 @@ function update(dt) {
     if (state.shieldRegenTimer >= GAME.REGEN_INTERVAL) {
       state.shieldRegenTimer -= GAME.REGEN_INTERVAL;
       state.shield = Math.min(GAME.MAX_SHIELD, state.shield + 1);
+      // новый сегмент — полный
+      state.shieldSegmentHp = state.shieldHitsPerSegment;
     }
   } else {
     state.shieldRegenTimer = 0;
   }
 
+  // Управление
   const kx = (input.keys.has("a") || input.keys.has("arrowleft") ? -1 : 0)
            + (input.keys.has("d") || input.keys.has("arrowright") ? 1 : 0);
   const ky = (input.keys.has("w") || input.keys.has("arrowup") ? -1 : 0)
@@ -277,39 +312,67 @@ function update(dt) {
   const targetX = mouse.x + kx * 250 * dt * 10;
   const targetY = mouse.y + ky * 250 * dt * 10;
   const lerp = 1 - Math.pow(0.001, dt);
-  state.ship.x += (targetX - state.ship.x) * Math.min(1, lerp * 1.4);
-  state.ship.y += (targetY - state.ship.y) * Math.min(1, lerp * 1.4);
+  const follow = state.followSpeed;
+  state.ship.x += (targetX - state.ship.x) * Math.min(1, lerp * follow);
+  state.ship.y += (targetY - state.ship.y) * Math.min(1, lerp * follow);
 
   const halfW = state.ship.w / 2;
   const halfH = state.ship.h / 2;
+
+  // Корабль может уходить на 50% за экран
   state.ship.x = Math.max(0, Math.min(state.canvasW, state.ship.x));
   state.ship.y = Math.max(0, Math.min(state.canvasH, state.ship.y));
 
+  // Стрельба игрока
   state.fireCooldown -= dt;
   if (state.fireCooldown <= 0) {
     state.fireCooldown = GAME.FIRE_INTERVAL;
+    const extraSpeed = state.speed * (GAME.SPEED_TO_BULLET ?? 0);
     state.playerBullets.push({
-      x: state.ship.x, y: state.ship.y - halfH,
-      vy: -GAME.PLAYER_BULLET_SPEED, r: 3,
+      x: state.ship.x,
+      y: state.ship.y - halfH,
+      vy: -(GAME.PLAYER_BULLET_SPEED + extraSpeed),
+      r: 3,
     });
   }
 
+  // ====== МАСШТАБ СПАВНА ОТ ЭКРАНА ======
+  const REF_AREA = 400 * 700;
+  const areaRatio = Math.sqrt((state.canvasW * state.canvasH) / REF_AREA);
+  const screenScale = Math.max(1, Math.min(3.0, areaRatio));
+
+  // Спавн астероидов
   state.spawnAsteroidTimer -= dt;
   if (state.spawnAsteroidTimer <= 0) {
-    state.spawnAsteroidTimer = GAME.ASTEROID_SPAWN_INTERVAL;
+    const interval = Math.max(0.25, GAME.ASTEROID_SPAWN_INTERVAL / screenScale);
+    state.spawnAsteroidTimer = interval;
+    const extraChance = Math.min(0.6, (screenScale - 1) * 0.4);
     spawnAsteroid();
-  }
-  state.spawnEnemyTimer -= dt;
-  if (state.spawnEnemyTimer <= 0) {
-    state.spawnEnemyTimer = GAME.ENEMY_SPAWN_INTERVAL;
-    spawnEnemy();
+    if (Math.random() < extraChance) spawnAsteroid();
   }
 
+  // Спавн врагов
+  state.spawnEnemyTimer -= dt;
+  if (state.spawnEnemyTimer <= 0) {
+    const limit = getEnemyLimit();
+    if (state.enemies.length < limit) {
+      const interval = Math.max(1.0, GAME.ENEMY_SPAWN_INTERVAL / screenScale);
+      state.spawnEnemyTimer = interval;
+      const extraChance = Math.min(0.5, (screenScale - 1) * 0.3);
+      spawnEnemy();
+      if (state.enemies.length < limit && Math.random() < extraChance) spawnEnemy();
+    } else {
+      state.spawnEnemyTimer = 1.0;
+    }
+  }
+
+  // Обновление снарядов игрока
   for (let i = state.playerBullets.length - 1; i >= 0; i--) {
     const b = state.playerBullets[i];
     b.y += b.vy * dt;
     if (b.y < -10) state.playerBullets.splice(i, 1);
   }
+  // Обновление вражеских снарядов
   for (let i = state.enemyBullets.length - 1; i >= 0; i--) {
     const b = state.enemyBullets[i];
     b.y += b.vy * dt;
@@ -317,25 +380,48 @@ function update(dt) {
   }
 
   const baseFall = 60 * state.speed;
+
+  // Астероиды
   for (let i = state.asteroids.length - 1; i >= 0; i--) {
     const a = state.asteroids[i];
     a.y += (baseFall * a.factor) * dt;
     if (a.y - a.r > state.canvasH + 20) state.asteroids.splice(i, 1);
   }
+
+  // ====== ВРАГИ ======
   for (let i = state.enemies.length - 1; i >= 0; i--) {
     const e = state.enemies[i];
-    e.y += (baseFall * 0.7) * dt;
-    e.fireTimer -= dt;
-   if (e.fireTimer <= 0 && e.y > 0) {
-  e.fireTimer = GAME.ENEMY_FIRE_INTERVAL;
-  state.enemyBullets.push({
-    x: e.x,
-    y: e.y + e.h / 2,
-    vy: GAME.ENEMY_BULLET_SPEED + state.speed * GAME.SPEED_TO_ENEMY_BULLET,
-    r: 4,
-  });
-}
 
+    if (e.phase === "entering") {
+      e.y += (baseFall * 0.7) * dt;
+      if (e.y >= e.targetY) {
+        e.y = e.targetY;
+        e.phase = "hovering";
+      }
+    } else {
+      e.driftPhase += dt * e.driftSpeed;
+      e.x = e.baseX + Math.sin(e.driftPhase) * GAME.ENEMY_HOVER_DRIFT;
+      e.y = e.targetY + Math.sin(e.driftPhase * 1.6) * 6;
+    }
+
+    e.x = Math.max(e.w / 2, Math.min(state.canvasW - e.w / 2, e.x));
+
+    e.fireTimer -= dt;
+    if (e.fireTimer <= 0 && e.y > 0) {
+      e.fireTimer = GAME.ENEMY_FIRE_INTERVAL * (0.8 + Math.random() * 0.6);
+      const extra = state.speed * (GAME.SPEED_TO_ENEMY_BULLET ?? 0);
+      state.enemyBullets.push({
+        x: e.x,
+        y: e.y + e.h / 2,
+        vy: GAME.ENEMY_BULLET_SPEED + extra,
+        r: 4,
+      });
+    }
+
+    if (e.y - e.h / 2 > state.canvasH + 20) state.enemies.splice(i, 1);
+  }
+
+  // Пули игрока vs астероиды/враги
   for (let i = state.playerBullets.length - 1; i >= 0; i--) {
     const b = state.playerBullets[i];
     let removed = false;
@@ -343,7 +429,7 @@ function update(dt) {
       const a = state.asteroids[j];
       const dx = b.x - a.x, dy = b.y - a.y;
       if (dx * dx + dy * dy < (a.r + b.r) ** 2) {
-        a.hp -= 1;
+        a.hp -= state.bulletDamage;
         state.playerBullets.splice(i, 1);
         removed = true;
         if (a.hp <= 0) state.asteroids.splice(j, 1);
@@ -355,7 +441,7 @@ function update(dt) {
     for (let j = state.enemies.length - 1; j >= 0; j--) {
       const e = state.enemies[j];
       if (Math.abs(b.x - e.x) < e.w / 2 && Math.abs(b.y - e.y) < e.h / 2) {
-        e.hp -= 1;
+        e.hp -= state.bulletDamage;
         state.playerBullets.splice(i, 1);
         if (e.hp <= 0) {
           state.enemies.splice(j, 1);
@@ -367,28 +453,33 @@ function update(dt) {
     }
   }
 
+  // Астероиды vs корабль
   for (let i = state.asteroids.length - 1; i >= 0; i--) {
     const a = state.asteroids[i];
     const dx = a.x - state.ship.x, dy = a.y - state.ship.y;
-    if (dx * dx + dy * dy < (a.r + Math.max(halfW, halfH)) ** 2) {
+    if (dx * dx + dy * dy < (a.r + GAME.HITBOX_RADIUS) ** 2) {
       state.asteroids.splice(i, 1);
       takeDamage(1);
       if (!state.running) return;
     }
   }
+
+  // Вражеские пули vs корабль
   for (let i = state.enemyBullets.length - 1; i >= 0; i--) {
     const b = state.enemyBullets[i];
     const dx = b.x - state.ship.x, dy = b.y - state.ship.y;
-    if (dx * dx + dy * dy < (b.r + Math.max(halfW, halfH)) ** 2) {
+    if (dx * dx + dy * dy < (b.r + GAME.HITBOX_RADIUS) ** 2) {
       state.enemyBullets.splice(i, 1);
       takeDamage(1);
       if (!state.running) return;
     }
   }
+
+  // Враги vs корабль
   for (let i = state.enemies.length - 1; i >= 0; i--) {
     const e = state.enemies[i];
-    if (Math.abs(e.x - state.ship.x) < (e.w / 2 + halfW) &&
-        Math.abs(e.y - state.ship.y) < (e.h / 2 + halfH)) {
+    if (Math.abs(e.x - state.ship.x) < (e.w / 2 + GAME.HITBOX_RADIUS) &&
+        Math.abs(e.y - state.ship.y) < (e.h / 2 + GAME.HITBOX_RADIUS)) {
       state.enemies.splice(i, 1);
       takeDamage(2);
       if (!state.running) return;
@@ -404,12 +495,24 @@ function takeDamage(amount) {
   state.shieldRegenTimer = 0;
   let dmg = amount;
 
-  if (state.shield > 0) {
-    const absorbed = Math.min(state.shield, dmg);
-    state.shield -= absorbed;
-    dmg -= absorbed;
-    if (state.shield === 0) state.shieldCooldown = GAME.SHIELD_BREAK_COOLDOWN;
+  // Сначала щит: каждый сегмент держит `shieldHitsPerSegment` ударов.
+  // Один "удар" = 1 единица урона (независимо от amount).
+  while (dmg > 0 && state.shield > 0) {
+    if (state.shieldSegmentHp > 0) {
+      // попадание съедает 1 хит активного сегмента
+      state.shieldSegmentHp -= 1;
+      dmg -= 1;
+      if (state.shieldSegmentHp <= 0) {
+        // сегмент разрушен
+        state.shield -= 1;
+        state.shieldSegmentHp = state.shieldHitsPerSegment;
+        if (state.shield === 0) {
+          state.shieldCooldown = state.shieldBreakCooldown;
+        }
+      }
+    }
   }
+
   if (dmg > 0) {
     state.hull -= dmg;
     if (state.hull <= 0) { state.hull = 0; endGame(); }
@@ -434,12 +537,53 @@ function spawnAsteroid() {
     rotSpeed: (Math.random() - 0.5) * 2,
   });
 }
+
 function spawnEnemy() {
-  const w = 44, h = 32;
+  if (state.enemies.length >= getEnemyLimit()) return;
+
+  const w = 96, h = 96;
+  const limit = getEnemyLimit();
+
+  // Делим экран на `limit` секторов, у каждого сектора — центр.
+  const sectorW = state.canvasW / limit;
+
+  // Собираем занятые сектора (по текущим baseX врагов)
+  const occupied = new Set();
+  for (const e of state.enemies) {
+    const idx = Math.min(limit - 1, Math.floor(e.baseX / sectorW));
+    occupied.add(idx);
+  }
+
+  // Свободные сектора
+  const freeSectors = [];
+  for (let i = 0; i < limit; i++) {
+    if (!occupied.has(i)) freeSectors.push(i);
+  }
+
+  // Если все сектора заняты — выходим (лимит уже достигнут, но подстрахуемся)
+  if (freeSectors.length === 0) return;
+
+  // Берём случайный свободный сектор
+  const sector = freeSectors[Math.floor(Math.random() * freeSectors.length)];
+
+  // Центр сектора + случайное смещение в пределах 60% от ширины сектора
+  const sectorCenter = sectorW * (sector + 0.5);
+  const jitter = (Math.random() - 0.5) * sectorW * 0.6;
+  const x = Math.max(w / 2, Math.min(state.canvasW - w / 2, sectorCenter + jitter));
+
   state.enemies.push({
-    x: Math.random() * (state.canvasW - w) + w / 2,
+    x,
+    baseX: x,
     y: -h,
-    w, h, hp: 3, maxHp: 3, fireTimer: 1.2,
+    targetY: GAME.ENEMY_HOVER_Y_MIN
+      + Math.random() * (GAME.ENEMY_HOVER_Y_MAX - GAME.ENEMY_HOVER_Y_MIN),
+    w, h,
+    hp: 3,
+    maxHp: 3,
+    fireTimer: 1.0 + Math.random() * 0.8,
+    driftPhase: Math.random() * Math.PI * 2,
+    driftSpeed: 0.4 + Math.random() * 0.6,
+    phase: "entering",
   });
 }
 
@@ -466,6 +610,7 @@ function drawStars(w, h) {
     ctx.fillRect(s.x * w, y, size, size * (2 + state.speed));
   }
 }
+
 function drawAsteroids() {
   for (const a of state.asteroids) {
     ctx.save();
@@ -493,27 +638,38 @@ function drawAsteroids() {
     ctx.restore();
   }
 }
+
 function drawEnemies() {
   for (const e of state.enemies) {
-    ctx.save();
-    ctx.translate(e.x, e.y);
-    ctx.beginPath();
-    ctx.moveTo(0, e.h / 2);
-    ctx.lineTo(-e.w / 2, -e.h / 2);
-    ctx.lineTo(e.w / 2, -e.h / 2);
-    ctx.closePath();
-    ctx.fillStyle = "#3a1030";
-    ctx.fill();
-    ctx.strokeStyle = "#ff2bd6";
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(0, -e.h / 4, 4, 0, Math.PI * 2);
-    ctx.fillStyle = "#ff2bd6";
-    ctx.fill();
+    if (state.enemyImg && state.enemyImg.complete && state.enemyImg.naturalWidth > 0) {
+      ctx.save();
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(state.enemyImg, e.x - e.w / 2, e.y - e.h / 2, e.w, e.h);
+      ctx.restore();
+    } else {
+      ctx.save();
+      ctx.translate(e.x, e.y);
+      ctx.beginPath();
+      ctx.moveTo(0, e.h / 2);
+      ctx.lineTo(-e.w / 2, -e.h / 2);
+      ctx.lineTo(e.w / 2, -e.h / 2);
+      ctx.closePath();
+      ctx.fillStyle = "#3a1030";
+      ctx.fill();
+      ctx.strokeStyle = "#ff2bd6";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(0, -e.h / 4, 4, 0, Math.PI * 2);
+      ctx.fillStyle = "#ff2bd6";
+      ctx.fill();
+      ctx.restore();
+    }
 
-    const barW = e.w, barH = 4;
-    const bx = -barW / 2, by = -e.h / 2 - 10;
+    const barW = 44;
+    const barH = 4;
+    const bx = e.x - barW / 2;
+    const by = e.y - e.h / 2 - 10;
     ctx.fillStyle = "rgba(0,0,0,0.6)";
     ctx.fillRect(bx, by, barW, barH);
     ctx.fillStyle = e.hp >= 2 ? "#33ffaa" : "#ff5577";
@@ -521,9 +677,9 @@ function drawEnemies() {
     ctx.strokeStyle = "rgba(255,255,255,0.3)";
     ctx.lineWidth = 1;
     ctx.strokeRect(bx, by, barW, barH);
-    ctx.restore();
   }
 }
+
 function drawBullets() {
   for (const b of state.playerBullets) {
     ctx.fillStyle = "#00e0ff";
@@ -542,6 +698,7 @@ function drawBullets() {
     ctx.shadowBlur = 0;
   }
 }
+
 function drawShip() {
   const s = state.ship;
   if (s.img && s.img.complete && s.img.naturalWidth > 0) {
@@ -558,11 +715,21 @@ function drawShip() {
     ctx.closePath();
     ctx.fill();
   }
+
+  if (window.DEBUG_HITBOX) {
+    ctx.strokeStyle = "rgba(255, 0, 0, 0.7)";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, GAME.HITBOX_RADIUS, 0, Math.PI * 2);
+    ctx.stroke();
+  }
 }
+
 function drawShield() {
   if (state.shield <= 0) return;
   const s = state.ship;
-  const baseR = Math.max(s.w, s.h) * 0.8;
+   // Радиус растёт с числом сегментов — видно, что щитов много
+  const baseR = Math.max(s.w, s.h) * (0.6 + state.shield * 0.05);
   const t = performance.now() * 0.002;
   const pulse = 1 + Math.sin(t) * 0.03;
 
@@ -592,10 +759,17 @@ function drawShield() {
 function updateHud() {
   document.getElementById("hudSpeed").textContent = state.speed.toFixed(2) + " км/с";
   document.getElementById("hudDist").textContent = formatKm(state.distance);
-  document.getElementById("hudShield").textContent = state.shield + "/" + GAME.MAX_SHIELD;
-  document.getElementById("hudHull").textContent = state.hull + "/" + GAME.MAX_HULL;
+
+  // Щит: сегменты + «прочность текущего сегмента»
+  const segHp = Math.max(0, state.shieldSegmentHp);
+  const segMax = state.shieldHitsPerSegment;
+  document.getElementById("hudShield").textContent =
+    `${state.shield}/${GAME.MAX_SHIELD} (${segHp}/${segMax})`;
+
+  document.getElementById("hudHull").textContent = state.hull + "/" + state.maxHull;
   document.getElementById("hudCredits").textContent = state.credits;
 }
+
 function formatKm(km) {
   if (km < 1000) return Math.floor(km) + " км";
   return (km / 1000).toFixed(2) + " тыс. км";
