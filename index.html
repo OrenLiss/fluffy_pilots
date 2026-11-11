@@ -2,38 +2,34 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>Fluffy Pilots</title>
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
 
-  <!-- ====== ЭКРАН АВТОРИЗАЦИИ ====== -->
+  <!-- ====== АВТОРИЗАЦИЯ ====== -->
   <section id="screen-auth" class="screen">
     <div class="card">
       <h1>🐰 Fluffy Pilots</h1>
       <p class="subtitle">Войдите, чтобы играть</p>
-
       <div class="tabs">
         <button id="tabLogin" class="active" type="button">Вход</button>
         <button id="tabRegister" type="button">Регистрация</button>
       </div>
-
       <form id="authForm">
         <input type="email" id="email" placeholder="Email" required autocomplete="email" />
         <input type="password" id="password" placeholder="Пароль (мин. 6 символов)" required autocomplete="current-password" />
         <button type="submit" class="btn" id="submitBtn">Войти</button>
       </form>
-
       <div class="message" id="message"></div>
     </div>
   </section>
 
-  <!-- ====== ЭКРАН АНГАРА ====== -->
+  <!-- ====== АНГАР ====== -->
   <section id="screen-hangar" class="screen hidden">
     <div class="hangar">
 
-      <!-- Корабль (сверху) -->
       <div class="ship-area">
         <img src="assets/ships/starter-ship-side.png"
              class="pixel-art ship-img"
@@ -41,7 +37,6 @@
              width="256" height="92">
       </div>
 
-      <!-- Характеристики -->
       <div class="stats">
         <div class="stat">
           <span class="stat-label">Скорость</span>
@@ -57,42 +52,75 @@
         </div>
       </div>
 
-      <!-- Выбор территории -->
-      <div class="zones">
-        <div class="zone locked" data-zone="planet-1" title="Скоро">
-          <div class="planet planet-1"></div>
-          <span class="lock">🔒</span>
-        </div>
-        <div class="zone locked" data-zone="planet-2" title="Скоро">
-          <div class="planet planet-2"></div>
-          <span class="lock">🔒</span>
-        </div>
-        <div class="zone active" data-zone="space" title="Космос">
-          <div class="planet space"></div>
-        </div>
-        <div class="zone locked" data-zone="planet-3" title="Скоро">
-          <div class="planet planet-3"></div>
-          <span class="lock">🔒</span>
-        </div>
-        <div class="zone locked" data-zone="planet-4" title="Скоро">
-          <div class="planet planet-4"></div>
-          <span class="lock">🔒</span>
-        </div>
+      <div class="credits-bar">
+        <span class="credits-label">💳 Кредиты</span>
+        <span class="credits-val" id="hangarCredits">0</span>
       </div>
 
-      <!-- Технические кнопки -->
+      <div class="zones">
+        <div class="zone locked" data-zone="planet-1" title="Скоро"><div class="planet planet-1"></div><span class="lock">🔒</span></div>
+        <div class="zone locked" data-zone="planet-2" title="Скоро"><div class="planet planet-2"></div><span class="lock">🔒</span></div>
+        <div class="zone active" data-zone="space" title="Космос"><div class="planet space"></div></div>
+        <div class="zone locked" data-zone="planet-3" title="Скоро"><div class="planet planet-3"></div><span class="lock">🔒</span></div>
+        <div class="zone locked" data-zone="planet-4" title="Скоро"><div class="planet planet-4"></div><span class="lock">🔒</span></div>
+      </div>
+
       <div class="tech-buttons">
         <button class="btn btn-secondary" id="logoutBtn">Выйти</button>
-        <button class="btn btn-ghost" id="settingsBtn">Настройки</button>
-        <button class="btn btn-ghost" id="profileBtn">Профиль</button>
-        <button class="btn btn-primary" id="playBtn">В полёт</button>
+        <button class="btn btn-ghost" id="settingsBtn">⚙ Настройки</button>
+        <button class="btn btn-ghost" id="profileBtn">👤 Профиль</button>
+        <button class="btn btn-primary" id="playBtn">🚀 В полёт</button>
       </div>
 
       <p class="user-email" id="userEmail"></p>
     </div>
   </section>
 
-  <!-- Скрипты -->
+  <!-- ====== ИГРА ====== -->
+  <section id="screen-game" class="screen hidden">
+    <div class="game-wrap">
+      <canvas id="gameCanvas"></canvas>
+
+      <div class="hud" id="hud">
+        <div class="hud-item"><span class="hud-label">Скорость</span><span class="hud-val" id="hudSpeed">1.00 км/с</span></div>
+        <div class="hud-item"><span class="hud-label">Дистанция</span><span class="hud-val" id="hudDist">0 км</span></div>
+        <div class="hud-item"><span class="hud-label">Щит</span><span class="hud-val" id="hudShield">6/6</span></div>
+        <div class="hud-item"><span class="hud-label">Прочность</span><span class="hud-val" id="hudHull">6/6</span></div>
+        <div class="hud-item"><span class="hud-label">Кредиты</span><span class="hud-val" id="hudCredits">0</span></div>
+        <button class="hud-pause" id="pauseBtn" title="Пауза">⏸</button>
+      </div>
+
+      <div class="overlay hidden" id="pauseOverlay">
+        <div class="overlay-card">
+          <h2>Пауза</h2>
+          <div class="overlay-stats">
+            <div>Дистанция: <b id="pauseDist">0 км</b></div>
+            <div>Уничтожено кораблей: <b id="pauseKills">0</b></div>
+            <div>Кредиты: <b id="pauseCredits">0</b></div>
+          </div>
+          <div class="overlay-buttons">
+            <button class="btn btn-primary" id="resumeBtn">Продолжить</button>
+            <button class="btn btn-ghost" id="pauseToHangarBtn">В ангар</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="overlay hidden" id="gameOverOverlay">
+        <div class="overlay-card">
+          <h2>Полёт закончен</h2>
+          <div class="overlay-stats">
+            <div>Пролетели: <b id="goDist">0 км</b></div>
+            <div>Уничтожено кораблей: <b id="goKills">0</b></div>
+            <div>Кредиты за полёт: <b id="goCredits">0</b></div>
+          </div>
+          <div class="overlay-buttons">
+            <button class="btn btn-primary" id="goToHangarBtn">Вернуться в ангар</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <script type="module" src="js/main.js"></script>
 </body>
 </html>

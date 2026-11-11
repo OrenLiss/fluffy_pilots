@@ -7,9 +7,10 @@ body {
   background: #05060f;
   color: #e6f1ff;
   overflow: hidden;
+  touch-action: none;
 }
 
-/* ====== ПИКСЕЛЬ-АРТ (для ВСЕХ будущих картинок) ====== */
+/* ====== ПИКСЕЛЬ-АРТ ====== */
 .pixel-art {
   image-rendering: pixelated;
   image-rendering: crisp-edges;
@@ -40,6 +41,7 @@ body {
   border-radius: 16px;
   padding: 32px 28px;
   box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+  margin: 16px;
 }
 #screen-auth h1 { margin: 0 0 8px; font-size: 22px; text-align: center; }
 #screen-auth .subtitle { text-align: center; color: #6b7280; font-size: 14px; margin-bottom: 24px; }
@@ -59,7 +61,7 @@ body {
 #screen-auth .error { color: #dc2626; }
 #screen-auth .success { color: #16a34a; }
 
-/* ====== КНОПКИ (общие) ====== */
+/* ====== КНОПКИ ====== */
 .btn {
   padding: 12px; border: none; border-radius: 10px;
   font-size: 15px; font-weight: 600; cursor: pointer; transition: 0.2s;
@@ -68,7 +70,7 @@ body {
 #screen-auth .btn:hover { background: #1e63d6; }
 #screen-auth .btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
-/* ====== ЭКРАН АНГАРА ====== */
+/* ====== АНГАР ====== */
 #screen-hangar {
   background:
     radial-gradient(ellipse at top, rgba(0, 200, 255, 0.12), transparent 60%),
@@ -76,8 +78,8 @@ body {
     #05060f;
   align-items: stretch;
   justify-content: stretch;
+  overflow-y: auto;
 }
-
 .hangar {
   width: 100%;
   max-width: 900px;
@@ -86,10 +88,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 18px;
-  overflow-y: auto;
 }
-
-/* --- Корабль (картинка) --- */
 .ship-area {
   height: 180px;
   display: flex;
@@ -100,13 +99,14 @@ body {
 .ship-img {
   animation: drift 4s ease-in-out infinite;
   filter: drop-shadow(0 0 12px #00e0ff) drop-shadow(0 0 24px #00e0ff88);
+  max-width: 100%;
+  height: auto;
 }
 @keyframes drift {
   0%, 100% { transform: translate(0, -4px); }
   50%      { transform: translate(0, 4px); }
 }
 
-/* --- Характеристики --- */
 .stats {
   display: flex; flex-direction: column; gap: 10px;
   padding: 16px 18px;
@@ -133,7 +133,6 @@ body {
   transition: width 0.4s ease;
 }
 
-/* --- Зоны / планеты --- */
 .zones {
   display: flex; justify-content: center; align-items: center;
   gap: 16px; padding: 12px 0;
@@ -155,17 +154,11 @@ body {
   font-size: 18px;
   filter: drop-shadow(0 0 6px #000);
 }
-
-/* Планеты — пока CSS-градиенты, потом заменим на PNG */
-.planet {
-  width: 100%; height: 100%; border-radius: 50%;
-  position: relative;
-}
+.planet { width: 100%; height: 100%; border-radius: 50%; position: relative; }
 .planet-1 { background: radial-gradient(circle at 30% 30%, #ff9d5c, #a12b09); box-shadow: 0 0 20px #ff7a3caa; }
 .planet-2 { background: radial-gradient(circle at 30% 30%, #6ee7b7, #065f46); box-shadow: 0 0 20px #34d399aa; }
 .planet-3 { background: radial-gradient(circle at 30% 30%, #93c5fd, #1e3a8a); box-shadow: 0 0 20px #60a5faaa; }
 .planet-4 { background: radial-gradient(circle at 30% 30%, #f0abfc, #6b21a8); box-shadow: 0 0 20px #e879f9aa; }
-
 .planet.space {
   background: radial-gradient(circle at 50% 50%, #0f172a 40%, #020617 70%),
               repeating-radial-gradient(circle at 30% 30%, #fff 0 1px, transparent 1px 20px);
@@ -173,7 +166,6 @@ body {
   border: 1px solid #00e0ff;
 }
 
-/* --- Технические кнопки --- */
 .tech-buttons {
   display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
   padding-top: 6px;
@@ -191,8 +183,141 @@ body {
   border: 1px solid rgba(0, 224, 255, 0.4);
 }
 .btn-ghost:hover { background: rgba(0, 224, 255, 0.1); }
+.user-email { text-align: center; color: #6b7280; font-size: 12px; margin: 0; }
 
-.user-email {
-  text-align: center; color: #6b7280; font-size: 12px;
-  margin: 0;
+/* ====== ЭКРАН ИГРЫ ====== */
+#screen-game {
+  background: #000;
+}
+.game-wrap {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+}
+#gameCanvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #02010a;
+  cursor: crosshair;
+}
+
+/* HUD */
+.hud {
+  position: absolute;
+  top: 8px; left: 8px; right: 8px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  pointer-events: none;
+  z-index: 5;
+}
+.hud-item {
+  display: flex;
+  flex-direction: column;
+  padding: 6px 10px;
+  background: rgba(0, 15, 30, 0.7);
+  border: 1px solid rgba(0, 224, 255, 0.35);
+  border-radius: 8px;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  backdrop-filter: blur(4px);
+  min-width: 70px;
+}
+.hud-label { color: #7feaff; text-transform: uppercase; font-size: 9px; }
+.hud-val { color: #e6f1ff; font-weight: 700; font-size: 14px; font-variant-numeric: tabular-nums; }
+.hud-pause {
+  margin-left: auto;
+  pointer-events: auto;
+  width: 42px; height: 42px;
+  border-radius: 8px;
+  background: rgba(0, 15, 30, 0.7);
+  border: 1px solid rgba(0, 224, 255, 0.5);
+  color: #00e0ff;
+  font-size: 18px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.hud-pause:hover { background: rgba(0, 224, 255, 0.15); box-shadow: 0 0 12px #00e0ff88; }
+
+/* Оверлеи */
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(2, 5, 20, 0.85);
+  backdrop-filter: blur(6px);
+  z-index: 10;
+  padding: 16px;
+}
+.overlay-card {
+  width: 100%;
+  max-width: 420px;
+  padding: 28px 24px;
+  background: rgba(10, 20, 40, 0.95);
+  border: 1px solid rgba(0, 224, 255, 0.4);
+  border-radius: 16px;
+  box-shadow: 0 0 40px rgba(0, 224, 255, 0.25);
+  text-align: center;
+}
+.overlay-card h2 {
+  margin: 0 0 20px;
+  color: #00e0ff;
+  text-shadow: 0 0 16px rgba(0, 224, 255, 0.6);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-size: 20px;
+}
+.overlay-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 22px;
+  color: #bcd6ff;
+  font-size: 15px;
+}
+.overlay-stats b { color: #00e0ff; font-size: 17px; }
+.overlay-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.overlay-buttons .btn { width: 100%; }
+
+/* Мобилки */
+@media (max-width: 480px) {
+  .hud-item { padding: 4px 6px; min-width: 58px; font-size: 10px; }
+  .hud-val { font-size: 12px; }
+  .hud-pause { width: 36px; height: 36px; font-size: 15px; }
+}
+/* Строка с балансом кредитов в ангаре */
+.credits-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background: rgba(10, 20, 40, 0.6);
+  border: 1px solid rgba(0, 224, 255, 0.25);
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(0, 224, 255, 0.08) inset;
+}
+.credits-label {
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #7feaff;
+}
+.credits-val {
+  font-size: 20px;
+  font-weight: 700;
+  color: #00e0ff;
+  text-shadow: 0 0 12px rgba(0, 224, 255, 0.6);
+  font-variant-numeric: tabular-nums;
 }
