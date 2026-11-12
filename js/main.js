@@ -4,6 +4,7 @@ import { initAuth } from "./auth.js";
 import { initHangar, setUserEmail } from "./hangar.js";
 import { initGame, startGame } from "./game.js";
 import { initWorkshop } from "./workshop.js";
+import { initChat } from "./chat.js"; // <-- Импорт есть
 
 const authScreen     = document.getElementById("screen-auth");
 const hangarScreen   = document.getElementById("screen-hangar");
@@ -17,9 +18,11 @@ const navDockyard = document.getElementById("navToDockyard");
 const navPlay     = document.getElementById("navToPlay");
 const workshopBack = document.getElementById("workshopBackBtn");
 
+// Инициализация модулей
 initAuth();
 initHangar();
 initGame();
+initChat(); // <-- ДОБАВЛЕН ВЫЗОВ ФУНКЦИИ ЧАТА
 
 function showScreen(screenName) {
   authScreen.classList.add("hidden");
@@ -53,7 +56,7 @@ navHangar.addEventListener("click", () => showScreen("hangar"));
 
 navWorkshop.addEventListener("click", () => {
   showScreen("workshop");
-  initWorkshop(); // Обновляем данные мастерской при каждом входе
+  initWorkshop();
 });
 
 navDockyard.addEventListener("click", () => alert("Верфь в разработке, капитан!"));
@@ -72,9 +75,17 @@ workshopBack.addEventListener("click", () => showScreen("hangar"));
 onAuthStateChanged(auth, (user) => {
   if (user) {
     setUserEmail(user.email);
-    initWorkshop(); // Инициализируем мастерскую сразу после логина
+    initWorkshop();
+    // Подписываемся на чат, если функция определена
+    if (typeof window.subscribeToChat === "function") {
+      window.subscribeToChat();
+    }
     showScreen("hangar");
   } else {
+    // Отписываемся от чата
+    if (typeof window.unsubscribeFromChat === "function") {
+      window.unsubscribeFromChat();
+    }
     showScreen("auth");
   }
 });

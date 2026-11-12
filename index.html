@@ -172,6 +172,27 @@
     <button class="nav-btn play-btn" id="navToPlay" style="background-image: url('assets/ui/ui-btn-nav.png');">В ПОЛЁТ</button>
   </nav>
 
+	<!-- ====== ГЛОБАЛЬНЫЙ ЧАТ ====== -->
+<div id="chatWidget" class="chat-widget">
+  <!-- Кнопка-переключатель -->
+  <button id="chatToggleBtn" class="chat-toggle-btn">💬 Чат</button>
+  
+  <!-- Сама панель чата (скрыта по умолчанию) -->
+  <div id="chatPanel" class="chat-panel hidden">
+    <div class="chat-header">
+      <span>Глобальный чат</span>
+      <button id="chatCloseBtn" class="chat-close-btn">&times;</button>
+    </div>
+    <div id="chatMessages" class="chat-messages">
+      <!-- Сюда будут добавляться сообщения -->
+    </div>
+    <div class="chat-input-area">
+      <input type="text" id="chatInput" placeholder="Написать сообщение..." maxlength="200">
+      <button id="chatSendBtn">➤</button>
+    </div>
+  </div>
+</div>
+
   <script type="module" src="js/main.js"></script>
 </body>
 </html>
