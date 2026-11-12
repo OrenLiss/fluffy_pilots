@@ -1,4 +1,5 @@
 import { db, auth } from "./firebase.js";
+import { loadProfile } from "./profile.js";
 import {
   collection,
   addDoc,
@@ -38,9 +39,13 @@ export function initChat() {
     input.value = ""; // Очищаем сразу
 
     try {
+      // Получаем ник из профиля
+      const profile = await loadProfile();
+      const displayName = profile.nickname || auth.currentUser.email.split("@")[0];
+
       await addDoc(collection(db, "global_chat"), {
         uid: auth.currentUser.uid,
-        name: auth.currentUser.email.split("@")[0], // Берем часть email до @ как ник
+        name: displayName, // <-- ИСПОЛЬЗУЕМ НИК
         text: text,
         timestamp: serverTimestamp()
       });

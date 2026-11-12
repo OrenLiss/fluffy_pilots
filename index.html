@@ -77,16 +77,55 @@
         <div class="zone locked" data-zone="planet-4" title="Скоро"><div class="planet planet-4"></div><span class="lock">🔒</span></div>
       </div>
 
-      <div class="hangar-bottom-row">
-        <button class="btn btn-secondary" id="logoutBtn">Выйти</button>
-        <button class="btn btn-ghost" id="settingsBtn">⚙ Настройки</button>
-        <button class="btn btn-ghost" id="profileBtn">👤 Профиль</button>
-      </div>
-
       <p class="user-email" id="userEmail"></p>
     </div>
   </section>
+  
+  <!-- ====== ЭКРАН ПРОФИЛЯ ====== -->
+  <section id="screen-profile" class="screen hidden">
+    <div class="profile-layout">
+      <div class="profile-panel">
+        <h2>ПРОФИЛЬ ПИЛОТА</h2>
+        
+        <div class="profile-info">
+          <div class="profile-avatar">👤</div>
+          <div class="profile-details">
+            <div class="profile-email" id="profileEmail">...</div>
+            <div class="profile-stat">Всего убито: <span id="profileKills">0</span></div>
+            <div class="profile-stat">Рекорд: <span id="profileBest">0 км</span></div>
+          </div>
+        </div>
 
+        <div class="profile-form">
+          <label>Никнейм (виден в чате):</label>
+          <input type="text" id="nicknameInput" placeholder="Введите ник..." maxlength="20">
+          <button class="btn btn-primary" id="saveNicknameBtn">Сохранить</button>
+        </div>
+
+        <button class="btn btn-ghost" id="profileBackBtn" style="margin-top: 20px;">Назад в меню</button>
+      </div>
+    </div>
+  </section>
+  
+  <!-- ====== ЭКРАН МЕНЮ ====== -->
+  <section id="screen-menu" class="screen hidden">
+    <div class="profile-layout">
+      <div class="profile-panel">
+        <h2>МЕНЮ</h2>
+        <div class="profile-info" style="justify-content: center; text-align: center; flex-direction: column;">
+          <div class="profile-avatar">👤</div>
+          <div class="profile-email" id="menuUserEmail">...</div>
+        </div>
+        
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <button class="btn btn-ghost" id="menuProfileBtn">👤 Профиль пилота</button>
+          <button class="btn btn-ghost" id="menuSettingsBtn">⚙ Настройки игры</button>
+          <button class="btn btn-secondary" id="menuLogoutBtn">🚪 Выйти из аккаунта</button>
+        </div>
+      </div>
+    </div>
+  </section>
+  
   <!-- ====== ЭКРАН МАСТЕРСКОЙ ====== -->
   <section id="screen-workshop" class="screen hidden">
     <div class="workshop-layout">
@@ -107,13 +146,11 @@
       </div>
 
       <!-- Правая панель -->
-      <div class="workshop-menu" style="background-image: url('assets/ui/ui-panel-bg.png');">
+      <div class="workshop-menu">
         <div class="menu-header">МАСТЕРСКАЯ</div>
         
         <!-- Сюда JS будет вставлять карточки -->
         <div class="menu-list" id="upgradesList"></div>
-        
-        <button class="btn btn-ghost menu-close-btn" id="workshopBackBtn">Назад в ангар</button>
       </div>
 
     </div>
@@ -130,7 +167,7 @@
         <div class="hud-item"><span class="hud-label">Прочность</span><span class="hud-val" id="hudHull">6/6</span></div>
         <div class="hud-item"><span class="hud-label">Кредиты</span><span class="hud-val" id="hudCredits">0</span></div>
         <button class="hud-pause" id="pauseBtn" title="Пауза">⏸</button>
-		<button class="hud-jump hidden" id="hyperJumpBtn" title="Гипер-прыжок">⚡</button>
+        <button class="hud-jump hidden" id="hyperJumpBtn" title="Гипер-прыжок">⚡</button>
       </div>
 
       <div class="overlay hidden" id="pauseOverlay">
@@ -166,32 +203,42 @@
 
   <!-- ====== НИЖНЯЯ ПАНЕЛЬ НАВИГАЦИИ ====== -->
   <nav class="bottom-nav hidden" id="mainNav">
+    <button class="nav-btn" id="navToMenu" style="background-image: url('assets/ui/ui-btn-nav.png');">МЕНЮ</button>
     <button class="nav-btn" id="navToHangar" style="background-image: url('assets/ui/ui-btn-nav.png');">АНГАР</button>
     <button class="nav-btn" id="navToWorkshop" style="background-image: url('assets/ui/ui-btn-nav.png');">МАСТЕРСКАЯ</button>
     <button class="nav-btn" id="navToDockyard" style="background-image: url('assets/ui/ui-btn-nav.png');">ВЕРФЬ</button>
+    <button class="nav-btn" id="navToMap" style="background-image: url('assets/ui/ui-btn-nav.png');">КАРТА</button>
     <button class="nav-btn play-btn" id="navToPlay" style="background-image: url('assets/ui/ui-btn-nav.png');">В ПОЛЁТ</button>
   </nav>
 
-	<!-- ====== ГЛОБАЛЬНЫЙ ЧАТ ====== -->
-<div id="chatWidget" class="chat-widget">
-  <!-- Кнопка-переключатель -->
-  <button id="chatToggleBtn" class="chat-toggle-btn">💬 Чат</button>
-  
-  <!-- Сама панель чата (скрыта по умолчанию) -->
-  <div id="chatPanel" class="chat-panel hidden">
-    <div class="chat-header">
-      <span>Глобальный чат</span>
-      <button id="chatCloseBtn" class="chat-close-btn">&times;</button>
-    </div>
-    <div id="chatMessages" class="chat-messages">
-      <!-- Сюда будут добавляться сообщения -->
-    </div>
-    <div class="chat-input-area">
-      <input type="text" id="chatInput" placeholder="Написать сообщение..." maxlength="200">
-      <button id="chatSendBtn">➤</button>
+  <!-- ====== ГЛОБАЛЬНЫЙ ЧАТ ====== -->
+  <div id="chatWidget" class="chat-widget">
+    <button id="chatToggleBtn" class="chat-toggle-btn">💬 Чат</button>
+    
+    <div id="chatPanel" class="chat-panel hidden">
+      <div class="chat-header">
+        <span>Глобальный чат</span>
+        <button id="chatCloseBtn" class="chat-close-btn">&times;</button>
+      </div>
+      <div id="chatMessages" class="chat-messages"></div>
+      <div class="chat-input-area">
+        <input type="text" id="chatInput" placeholder="Написать сообщение..." maxlength="200">
+        <button id="chatSendBtn">➤</button>
+      </div>
     </div>
   </div>
-</div>
+  
+    <!-- ====== ОКНО ПОДТВЕРЖДЕНИЯ ВЫХОДА ====== -->
+  <div id="logoutConfirmOverlay" class="overlay hidden" style="z-index: 300;">
+    <div class="overlay-card" style="max-width: 360px;">
+      <h2 id="logoutConfirmTitle">Вы уверены?</h2>
+      <p id="logoutConfirmText" style="color: #bcd6ff; margin-bottom: 24px;">Вы точно уверены, капитан?</p>
+      <div class="overlay-buttons" style="flex-direction: row; gap: 12px;">
+        <button class="btn btn-secondary" id="logoutConfirmYes" style="flex: 1;">ДА!</button>
+        <button class="btn btn-ghost" id="logoutConfirmNo" style="flex: 1;">Нет</button>
+      </div>
+    </div>
+  </div>
 
   <script type="module" src="js/main.js"></script>
 </body>

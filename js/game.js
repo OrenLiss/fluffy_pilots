@@ -275,8 +275,15 @@ async function finishFlight(viaPause) {
     if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
     document.getElementById("pauseOverlay").classList.add("hidden");
     document.getElementById("gameOverOverlay").classList.add("hidden");
-    document.getElementById("screen-game").classList.add("hidden");
-    document.getElementById("screen-hangar").classList.remove("hidden");
+    // Возвращаемся в ангар через главную навигацию
+    if (window.showScreen) {
+      window.showScreen("hangar");
+    } else {
+      // Фолбэк, если что-то пошло не так
+      document.getElementById("screen-game").classList.add("hidden");
+      document.getElementById("screen-hangar").classList.remove("hidden");
+      document.getElementById("mainNav").classList.remove("hidden");
+    }
     document.dispatchEvent(new CustomEvent("profile-updated"));
   }
 }

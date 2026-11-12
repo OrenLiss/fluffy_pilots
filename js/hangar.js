@@ -1,5 +1,3 @@
-import { signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { auth } from "./firebase.js";
 import { loadProfile, upgradeStat, getUpgradeCost } from "./profile.js";
 
 const STATS = ["speed", "hull", "shield", "damage"];
@@ -7,18 +5,14 @@ let creditsEl = null;
 let currentProfile = null;
 
 export function initHangar() {
-  const logoutBtn = document.getElementById("logoutBtn");
-  const settingsBtn = document.getElementById("settingsBtn");
-  const profileBtn = document.getElementById("profileBtn");
   creditsEl = document.getElementById("hangarCredits");
 
-  logoutBtn.addEventListener("click", async () => await signOut(auth));
-  settingsBtn.addEventListener("click", () => showToast("Настройки — скоро", false));
-  profileBtn.addEventListener("click", () => showToast("Профиль — скоро", false));
-
+  // Кнопки прокачки (защита от null)
   STATS.forEach((stat) => {
     const btn = document.getElementById("plus-" + stat);
-    btn.addEventListener("click", () => onUpgrade(stat));
+    if (btn) {
+      btn.addEventListener("click", () => onUpgrade(stat));
+    }
   });
 
   document.addEventListener("profile-updated", refreshProfile);
@@ -26,7 +20,8 @@ export function initHangar() {
 
 async function onUpgrade(stat) {
   const btn = document.getElementById("plus-" + stat);
-  btn.disabled = true;
+  if (btn) btn.disabled = true;
+  
   try {
     const res = await upgradeStat(stat);
     if (!res.ok) {
@@ -38,7 +33,7 @@ async function onUpgrade(stat) {
     }
     await refreshProfile();
   } finally {
-    btn.disabled = false;
+    if (btn) btn.disabled = false;
   }
 }
 
@@ -62,29 +57,35 @@ function renderStats() {
     const cost = getUpgradeCost(level);
 
     const segContainer = document.getElementById("seg-" + stat);
-    if (segContainer.childElementCount === 0) {
-      for (let i = 0; i < 10; i++) {
-        const seg = document.createElement("div");
-        seg.className = "seg";
-        segContainer.appendChild(seg);
+    if (segContainer) {
+      if (segContainer.childElementCount === 0) {
+        for (let i = 0; i < 10; i++) {
+          const seg = document.createElement("div");
+          seg.className = "seg";
+          segContainer.appendChild(seg);
+        }
       }
+      Array.from(segContainer.children).forEach((seg, i) => {
+        seg.classList.toggle("filled", i < level);
+      });
     }
-    Array.from(segContainer.children).forEach((seg, i) => {
-      seg.classList.toggle("filled", i < level);
-    });
 
-    document.getElementById("lvl-" + stat).textContent = level + "/10";
+    const lvlEl = document.getElementById("lvl-" + stat);
+    if (lvlEl) lvlEl.textContent = level + "/10";
+
     const costEl = document.getElementById("cost-" + stat);
     const btn = document.getElementById("plus-" + stat);
 
-    if (cost === null) {
-      costEl.textContent = "MAX";
-      costEl.classList.add("max");
-      btn.disabled = true;
-    } else {
-      costEl.textContent = cost;
-      costEl.classList.remove("max");
-      btn.disabled = (currentProfile.credits ?? 0) < cost;
+    if (costEl && btn) {
+      if (cost === null) {
+        costEl.textContent = "MAX";
+        costEl.classList.add("max");
+        btn.disabled = true;
+      } else {
+        costEl.textContent = cost;
+        costEl.classList.remove("max");
+        btn.disabled = (currentProfile.credits ?? 0) < cost;
+      }
     }
   });
 }

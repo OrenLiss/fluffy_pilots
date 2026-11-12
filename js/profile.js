@@ -1,6 +1,6 @@
 // Работа с профилем игрока в Firestore
 import {
-  doc, getDoc, setDoc, updateDoc, serverTimestamp, increment, arrayUnion
+  doc, getDoc, setDoc, updateDoc, deleteDoc, serverTimestamp, increment, arrayUnion
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { db, auth } from "./firebase.js";
 
@@ -26,6 +26,7 @@ function defaultProfile() {
     shieldLevel: 0,
     damageLevel: 0,
     upgrades: [], // массив купленных улучшений
+	nickname: "",
   };
 }
 
@@ -149,4 +150,46 @@ export async function buyUpgrade(upgradeId, cost) {
   }
 
   return { ok: true, newCredits: currentCredits - cost };
+}
+
+// Обновление никнейма с проверкой на уникальность
+export async function updateNickname(newNickname) {
+  const user = auth.currentUser;
+  if (!user) return { ok: false, reason: "no-auth" };
+
+  const cleanNick = newNickname.trim().toLowerCase(); // Приводим к нижнему регистру
+  if (!cleanNick) return { ok: false, reason: "empty" };
+
+  const usernameRef = doc(db, "usernames", cleanNick);
+  const ref = playerRef(user.uid);
+
+  try {
+    // 1. Проверяем, свободен ли ник
+    const usernameSnap = await getDoc(usernameRef);
+    if (usernameSnap.exists() && usernameSnap.data().uid !== user.uid) {
+      return { ok: false, reason: "taken" };
+    }
+
+    // 2. Получаем текущий профиль, чтобы узнать старый ник
+    const playerSnap = await getDoc(ref);
+    const oldNick = playerSnap.data()?.nickname;
+
+    // 3. Если ник меняется — удаляем старую запись из usernames
+    if (oldNick && oldNick.toLowerCase() !== cleanNick) {
+      const oldUsernameRef = doc(db, "usernames", oldNick.toLowerCase());
+      await deleteDoc(oldUsernameRef);
+    }
+
+    // 4. Создаем/обновляем запись в usernames и обновляем профиль
+    await setDoc(usernameRef, { uid: user.uid });
+    await updateDoc(ref, {
+      nickname: cleanNick,
+      updatedAt: serverTimestamp(),
+    });
+
+    return { ok: true };
+  } catch (err) {
+    console.error("Ошибка обновления ника:", err);
+    return { ok: false, reason: "firestore-error", error: err };
+  }
 }
