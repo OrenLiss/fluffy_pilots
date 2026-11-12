@@ -287,3 +287,19 @@ html, body {
   .nav-btn { min-width: 80px; padding: 8px 12px; font-size: 11px; }
   .bottom-nav { gap: 6px; }
 }
+.hud-jump {
+  pointer-events: auto;
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  background: rgba(255, 43, 214, 0.2);
+  border: 1px solid #ff2bd6;
+  color: #ff2bd6;
+  font-size: 20px;
+  cursor: pointer;
+  transition: 0.2s;
+  margin-left: 10px;
+}
+.hud-jump:hover {
+  background: rgba(255, 43, 214, 0.4);
+  box-shadow: 0 0 15px #ff2bd6;
+}

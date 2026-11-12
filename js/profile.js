@@ -9,7 +9,7 @@ const COLLECTION = "players";
 export function getUpgradeCost(currentLevel) {
   if (currentLevel >= 10) return null;
   const n = currentLevel + 1;
-  return 100 * n * n;
+  return 500 * n * n * n;
 }
 
 function playerRef(uid) {

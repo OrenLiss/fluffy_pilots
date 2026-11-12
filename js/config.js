@@ -4,6 +4,21 @@ export const SIZES = {
 };
 
 export const GAME = {
+  // Улучшения
+  DOUBLE_GUN_OFFSET: 15,         // отступ пуль от центра при двойном стволе
+  PLASMA_SHIELD_RADIUS: 300,     // радиус взрыва плазменного щита
+  PLASMA_SHIELD_DAMAGE: 999,     // урон взрыва (убивает всё)
+  
+  HOMING_ROCKET_INTERVAL: 5,     // интервал спавна самонаводящихся ракет (сек)
+  HOMING_ROCKET_SPEED: 400,      // скорость ракеты
+  
+  PHOTON_CANNON_KILLS: 10,       // убийств для активации фотонной пушки
+  PHOTON_CANNON_DURATION: 3,     // длительность лазера (сек)
+  PHOTON_CANNON_WIDTH: 70,       // ширина лазера (px)
+  
+  TURBO_ENGINE_KILLS: 30,        // убийств для гипер-прыжка
+  TURBO_JUMP_DURATION: 5,        // длительность гипер-прыжка (сек)
+	
   // Щит и прочность
   MAX_SHIELD: 6,
   MAX_HULL: 6,
