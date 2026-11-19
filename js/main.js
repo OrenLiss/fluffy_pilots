@@ -6,6 +6,7 @@ import { initGame, startGame } from "./game.js";
 import { initWorkshop } from "./workshop.js";
 import { initChat } from "./chat.js";
 import { initProfileScreen } from "./profile-screen.js";
+import { loadProfile } from "./profile.js";
 
 // --- Получаем все экраны ---
 const screens = {
