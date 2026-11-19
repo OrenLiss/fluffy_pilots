@@ -11,7 +11,8 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 let unsubscribeChat = null;
-const CHAT_LIMIT = 50; // Показываем последние 50 сообщений
+const CHAT_LIMIT = 50;
+let isBanned = false; // Флаг для локальной блокировки
 
 export function initChat() {
   const toggleBtn = document.getElementById("chatToggleBtn");
@@ -25,27 +26,44 @@ export function initChat() {
   toggleBtn.addEventListener("click", () => panel.classList.toggle("hidden"));
   closeBtn.addEventListener("click", () => panel.classList.add("hidden"));
 
-  // Отправка по кнопке
-  sendBtn.addEventListener("click", sendMessage);
-  // Отправка по Enter
-  input.addEventListener("keypress", (e) => {
-    if (e.key === "Enter") sendMessage();
-  });
+  // Функция проверки на опасный ввод (XSS)
+  function isMalicious(text) {
+    const badWords = ["<", ">", "script", "iframe", "onerror", "onload", "onclick", "javascript:", "alert("];
+    const lowerText = text.toLowerCase();
+    return badWords.some(word => lowerText.includes(word));
+  }
 
   async function sendMessage() {
+    if (isBanned) {
+      alert("Вы забанены за нарушение правил чата.");
+      return;
+    }
+
     const text = input.value.trim();
     if (!text || !auth.currentUser) return;
+
+    // Проверка на опасный контент
+    if (isMalicious(text)) {
+      isBanned = true; // Локальный бан
+      input.value = "";
+      input.disabled = true;
+      sendBtn.disabled = true;
+      alert("⛔ БАН! Попытка внедрения кода (XSS) запрещена. Вы отключены от чата.");
+      
+      // Здесь можно отправить лог в Firestore (например, в отдельную коллекцию bans)
+      console.warn("XSS attempt detected from user:", auth.currentUser.email, "Text:", text);
+      return;
+    }
 
     input.value = ""; // Очищаем сразу
 
     try {
-      // Получаем ник из профиля
       const profile = await loadProfile();
       const displayName = profile.nickname || auth.currentUser.email.split("@")[0];
 
       await addDoc(collection(db, "global_chat"), {
         uid: auth.currentUser.uid,
-        name: displayName, // <-- ИСПОЛЬЗУЕМ НИК
+        name: displayName,
         text: text,
         timestamp: serverTimestamp()
       });
@@ -54,10 +72,16 @@ export function initChat() {
     }
   }
 
-  // Функция подписки (вызывается из main.js при входе)
-  window.subscribeToChat = () => {
-    if (unsubscribeChat) unsubscribeChat(); // Отписываемся от старой, если была
+  // Отправка по кнопке и Enter
+  sendBtn.addEventListener("click", sendMessage);
+  input.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") sendMessage();
+  });
 
+  // Подписка на сообщения
+  window.subscribeToChat = () => {
+    if (unsubscribeChat) unsubscribeChat();
+    
     const q = query(
       collection(db, "global_chat"),
       orderBy("timestamp", "asc"),
@@ -65,7 +89,6 @@ export function initChat() {
     );
 
     unsubscribeChat = onSnapshot(q, (snapshot) => {
-      // Перерисовываем весь список (для 50 сообщений это быстро)
       messagesEl.innerHTML = "";
       
       snapshot.forEach((doc) => {
@@ -76,23 +99,34 @@ export function initChat() {
           div.classList.add("mine");
         }
         
-        // Форматируем время (если есть)
         let timeStr = "";
         if (data.timestamp) {
           const date = data.timestamp.toDate();
           timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         }
 
-        div.innerHTML = `<span class="sender">${data.name}</span>${data.text} <span style="font-size:10px; color:#556;">${timeStr}</span>`;
+        // БЕЗОПАСНЫЙ РЕНДЕР (БЕЗ innerHTML)
+        const senderSpan = document.createElement("span");
+        senderSpan.className = "sender";
+        senderSpan.textContent = data.name;
+
+        const messageText = document.createTextNode(data.text);
+
+        const timeSpan = document.createElement("span");
+        timeSpan.style.fontSize = "10px";
+        timeSpan.style.color = "#556";
+        timeSpan.textContent = timeStr;
+
+        div.appendChild(senderSpan);
+        div.appendChild(messageText);
+        div.appendChild(timeSpan);
         messagesEl.appendChild(div);
       });
 
-      // Авто-скролл вниз (простой вариант)
       messagesEl.scrollTop = messagesEl.scrollHeight;
     });
   };
 
-  // Функция отписки (вызывается при выходе)
   window.unsubscribeFromChat = () => {
     if (unsubscribeChat) {
       unsubscribeChat();

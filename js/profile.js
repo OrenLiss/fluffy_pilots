@@ -192,4 +192,18 @@ export async function updateNickname(newNickname) {
     console.error("Ошибка обновления ника:", err);
     return { ok: false, reason: "firestore-error", error: err };
   }
+}// ====== БАН ПОЛЬЗОВАТЕЛЯ ======
+export async function banUser(uid, reason) {
+  try {
+    const ref = doc(db, "players", uid);
+    await updateDoc(ref, {
+      isBanned: true,
+      banReason: reason,
+      bannedAt: serverTimestamp()
+    });
+    return { ok: true };
+  } catch (err) {
+    console.error("Ошибка бана:", err);
+    return { ok: false, error: err };
+  }
 }

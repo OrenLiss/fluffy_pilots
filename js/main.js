@@ -125,20 +125,32 @@ logoutYes?.addEventListener("click", async () => {
 // ==========================================
 // --- СЛУШАТЕЛЬ АВТОРИЗАЦИИ (СТАВИМ В КОНЕЦ) ---
 // ==========================================
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
   if (user) {
-    setUserEmail(user.email);
-    
-    // Подписываемся на чат
-    if (typeof window.subscribeToChat === "function") window.subscribeToChat();
-    
-    // Отправляем в ангар
-    showScreen("hangar");
+    try {
+      const profile = await loadProfile();
+      
+      // ПРОВЕРКА НА БАН
+      if (profile.isBanned) {
+        // Скрываем всё
+        document.querySelectorAll('.screen').forEach(el => el.classList.add('hidden'));
+        document.getElementById('mainNav').classList.add('hidden');
+        
+        // Показываем страшный алерт (или можно сделать отдельный экран)
+        alert(`ВЫ ЗАБАНЕНЫ!\n\nПричина: ${profile.banReason || "Нарушение правил"}\n\nДоступ к игре заблокирован.`);
+        await signOut(auth); // Выкидываем из аккаунта
+        return;
+      }
+
+      setUserEmail(user.email);
+      if (typeof window.subscribeToChat === "function") window.subscribeToChat();
+      showScreen("hangar");
+    } catch (err) {
+      console.error("Ошибка проверки профиля:", err);
+      showScreen("hangar"); // Если база не ответила, лучше пустить играть
+    }
   } else {
-    // Отписываемся от чата
     if (typeof window.unsubscribeFromChat === "function") window.unsubscribeFromChat();
-    
-    // Отправляем на авторизацию
     showScreen("auth");
   }
 });
